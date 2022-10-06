@@ -14,12 +14,13 @@ class SMP_HeatMapHead(nn.Module):
         layers.append(
             nn.Conv2d(
                 in_channels=int(cfg["smp"]["decoder_output_classes"]),
-                out_channels=8,
+                out_channels=1,
                 kernel_size=3,
                 padding=1
 
             ))
         layers.append(nn.ReLU(inplace=True))
+        """
         layers.append(nn.BatchNorm2d(8))
         layers.append(
             nn.Conv2d(
@@ -39,23 +40,17 @@ class SMP_HeatMapHead(nn.Module):
                 padding=1,
 
             ))
-        layers.append(nn.Sigmoid())
+        layers.append(nn.ReLU(inplace=True))
+        """
         self.model = nn.Sequential(*layers)
 
     def forward(self, x):
         x = self.model.forward(x)
-        heatmap = torch.clip(x, 0, 1.0)
-        return heatmap
-        #x_like = torch.zeros_like(x)
-        #y = torch.max(x.view(x.shape[0], -1), dim=1)[0]
-        #for i in range(x.shape[0]):
-        #    x_like[i] = y[i]
-
-#            if (y[i] < 1e-3):
- #                y[i] = 1e-3
-
-
-        #return x / x_like
+        x_like = torch.zeros_like(x)
+        y = torch.max(x.view(x.shape[0], -1), dim=1)[0]
+        for i in range(x.shape[0]):
+            x_like[i] = y[i]
+        return x / x_like
 
     def print_details(self):
         batch_size = 32

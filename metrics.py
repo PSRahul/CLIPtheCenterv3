@@ -14,10 +14,11 @@ import cv2
 from torchvision.datasets import CocoDetection
 from tqdm import tqdm
 from yaml.loader import SafeLoader
+from post_process.torchmetric_evaluation import calculate_torchmetrics_mAP
 from post_process.nms import perform_nms
 from post_process.utils import resize_predictions_image_size, assign_classes
 from post_process.visualise import visualise_bbox
-from post_process.get_clip_embedding import generate_clip_embedding
+
 
 # matplotlib.use('Agg')
 
@@ -65,21 +66,21 @@ def set_logging(cfg):
 
 def get_groundtruths(dataset, show_image=False):
     gt = np.empty((0, 7))
-    for index in tqdm(range(len(dataset))):
+    for index in range(len(dataset)):
         image_id = dataset.ids[index]
         image, anns = dataset[index]
         image = np.array(image)
         bounding_box_list = []
         class_list = []
         for ann in anns:
-            bounding_box_list.append(ann["bbox"])
-            class_list.append(ann["category_id"])
+            bounding_box_list.append(ann['bbox'])
+            class_list.append(ann['category_id'])
 
-        if show_image:
+        if (show_image):
             bbox = bounding_box_list[0]
             bbox = [int(x) for x in bbox]
             print(bbox)
-            image = image[bbox[1] : bbox[1] + bbox[3], bbox[0] : bbox[0] + bbox[2], :]
+            image = image[bbox[1]:bbox[1] + bbox[3], bbox[0]:bbox[0] + bbox[2], :]
             plt.imshow(image)
             plt.show()
             break
@@ -89,104 +90,60 @@ def get_groundtruths(dataset, show_image=False):
         scores_list = np.ones((len(class_list), 1))
         class_list = np.array(class_list).reshape((len(class_list), 1))
         # ["image_id", "bbox_y", "bbox_x", "w", "h", "score", "class_label"]
-        if len(bounding_box_list != 0):
-            gt_idx = np.hstack(
-                (image_id_list, bounding_box_list, scores_list, class_list)
-            )
+        if (len(bounding_box_list != 0)):
+            gt_idx = np.hstack((image_id_list, bounding_box_list, scores_list, class_list))
             gt = np.vstack((gt, gt_idx))
     return gt
 
 
 def main(cfg):
     dataset_root = cfg["data"]["root"]
-    dataset = CocoDetection(
-        root=os.path.join(dataset_root, "data"),
-        annFile=os.path.join(dataset_root, "labels.json"),
-    )
+    dataset = CocoDetection(root=os.path.join(dataset_root, "data"),
+                            annFile=os.path.join(dataset_root, "labels.json"))
+    clip_embedding = np.load(cfg["clip_embedding_path"])
 
-    if cfg["use_metric_data_path"]:
+    if (cfg["use_metric_data_path"]):
         print("Loading data from ", cfg["metric_data_path"])
         data = np.load(cfg["metric_data_path"])
         gt = data["gt"]
         prediction = data["prediction"]
         prediction_with_nms = data["prediction_with_nms"]
         prediction_with_nms_resized = data["prediction_with_nms_resized"]
-        if not cfg["post_processing"]["perform_nms"]:
-            prediction_with_nms = prediction
     else:
         gt = get_groundtruths(dataset)
         prediction = np.load(cfg["prediction_path"])
-        if cfg["post_processing"]["perform_nms"]:
+        if cfg["perform_nms"]:
             prediction_with_nms = perform_nms(cfg, prediction)
         else:
             prediction_with_nms = prediction
         print("Resizing Predictions")
-        prediction_with_nms_resized = resize_predictions_image_size(
-            cfg, dataset, copy.deepcopy(prediction_with_nms)
-        )
+        prediction_with_nms_resized = resize_predictions_image_size(cfg, dataset, copy.deepcopy(prediction_with_nms))
         print("Metric Data saved at ", os.path.join(checkpoint_dir, "data.npz"))
-        np.savez(
-            os.path.join(checkpoint_dir, "data.npz"),
-            gt=gt,
-            prediction=prediction,
-            prediction_with_nms=prediction_with_nms,
-            prediction_with_nms_resized=prediction_with_nms_resized,
-        )
+        np.savez(os.path.join(checkpoint_dir, "data.npz"), gt=gt, prediction=prediction,
+                 prediction_with_nms=prediction_with_nms,
+                 prediction_with_nms_resized=prediction_with_nms_resized)
 
     print("GroundTruth Shape", gt.shape)
     print("Prediction Shape", prediction.shape)
     print("Prediction with NMS Shape", prediction_with_nms.shape)
-    class_name_list = []
-    class_id_list = []
-    for index in tqdm(range(len(dataset.coco.cats))):
-        cat = dataset.coco.cats[index]
-        class_id_list.append(cat["id"])
-        class_name_list.append(cat["name"])
-    if cfg["generate_clip_embedding"]:
-        clip_embedding = generate_clip_embedding(
-            cfg, checkpoint_dir, class_id_list, class_name_list
-        )
-    else:
-        clip_embedding = np.load(cfg["clip_embedding_path"])
 
-    prediction_with_nms_resized = assign_classes(
-        clip_embedding, prediction_with_nms_resized
-    )
-
+    prediction_with_nms_resized = assign_classes(clip_embedding, prediction_with_nms_resized)
     # calculate_torchmetrics_mAP(gt, prediction_with_nms_resized)
     print("-------------------------------------")
     print("WITHOUT CATEGORY LABELS")
-    calculate_coco_result(
-        gt=os.path.join(dataset_root, "labels.json"),
-        prediction=prediction_with_nms_resized,
-        image_index_only=False,
-        image_index=None,
-        useCats=0,
-    )
+    calculate_coco_result(gt=os.path.join(dataset_root, "labels.json"), prediction=prediction_with_nms_resized,
+                          image_index_only=False, image_index=None,useCats=0)
     print("-------------------------------------")
     print("WITH CATEGORY LABELS")
 
-    calculate_coco_result(
-        gt=os.path.join(dataset_root, "labels.json"),
-        prediction=prediction_with_nms_resized,
-        image_index_only=False,
-        image_index=None,
-        useCats=1,
-    )
+    calculate_coco_result(gt=os.path.join(dataset_root, "labels.json"), prediction=prediction_with_nms_resized,
+                          image_index_only=False, image_index=None, useCats=1)
     print("-------------------------------------")
-    for id in range(1, len(dataset) + 1):
-        visualise_bbox(
-            cfg=cfg,
-            dataset=dataset,
-            id=id,
-            gt=gt,
-            pred=prediction_with_nms_resized,
-            draw_gt=True,
-            draw_pred=True,
-            resize_image_to_output_shape=False,
-            checkpoint_dir=checkpoint_dir,
-        )
-        # visualise_bbox(cfg=cfg, dataset=dataset, id=id, gt=gt, pred=prediction_with_nms, draw_gt=False,
+    for id in range(1, len(dataset)+1):
+        visualise_bbox(cfg=cfg, dataset=dataset, id=id, gt=gt, pred=prediction_with_nms_resized, draw_gt=True,
+                       draw_pred=True,
+                       resize_image_to_output_shape=False,checkpoint_dir=checkpoint_dir)
+        #visualise_bbox(cfg=cfg, dataset=dataset, id=id, gt=gt, pred=prediction_with_nms, draw_gt=False,
         #               draw_pred=True,
         #               resize_image_to_output_shape=True,checkpoint_dir=checkpoint_dir)
 

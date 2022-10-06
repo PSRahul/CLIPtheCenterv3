@@ -1,16 +1,17 @@
-# CLIPtheCenter
-Project is in Progress
+# CLIPandDetect
 
-## Introduction
+Commit before refactor
 
-This project is part of my master thesis at Technical University of Munich (TUM). I am advised by  Dr. rer. nat. Felix Dietrich from TUM along with M. Sc. Mathias Sundholm, M. Sc. Alexander Dolokov from Precibake GmBH.
+Commit before PASCAL_ZETA
 
-## Model Architecture
+Commit before adding CLIP Classifier Head
 
-![](assets/arch.png) 
+Commit before adding SMP based Architectures
 
-## Training and Evaluation Scripts.
+Commit before changing Bounding box groundtruth to heatmaps
 
-These are currently under development. Final code as well as results will be available shortly
+Commit before Code Restructure
 
-Copyright © 2022 Rahul Parthasarathy Srikanth, PSRahul
+Commit before heatmap based BBox Loss
+
+Commit before MultiObject fix
