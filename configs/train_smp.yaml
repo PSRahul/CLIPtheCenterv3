@@ -14,10 +14,7 @@ trainer:
   train_checkpoint: "/home/psrahul/MasterThesis/repo/Phase5/Outputs/PASCAL_15_5_1500/Training/Unetresnet50/04102022_1541/epoch-35-loss-0.0030628.pth"
   test_checkpoint: "/home/psrahul/Desktop/temp/epoch-635-loss-30.4418410.pth"
   val_save_interval: 5
-  center_scatter_loss: False
-  center_heatmap_loss: True
-  bbox_heatmap_loss: False
-  bbox_scatter_loss: True
+
   embedding_loss_start_epoch: 300
   bbox_loss_start_epoch: -1
 
@@ -26,11 +23,11 @@ data:
   val_data_root: "/home/psrahul/MasterThesis/datasets/PASCAL_15_5_1500/base_classes/val/coco/"
   test_data_root: "/home/psrahul/MasterThesis/datasets/PASCAL_15_5_1500/base_classes/train/coco/"
   train_aug: False
-  train_batch_size: 4 #10
-  val_batch_size: 4 #10
-  test_batch_size: 3     #10
-  input_dimension: 320 # EfficientNetB2
-  #   input_dimension: 384  ResNet18
+  train_batch_size: 4 
+  val_batch_size: 4 
+  test_batch_size: 3     
+  input_dimension: 320 
+ 
 heatmap:
   output_dimension: 320
   radius_scaling: 16
@@ -44,27 +41,15 @@ smp:
   decoder_output_classes: 16 #256 #16
   decoder_output_dimension: 320
   freeze_encoder: False
-
-model:
-  encoder:
-    encoder_name: EfficientNetB2Model #EfficientNetB2Model #EfficientNetB3Model #ResNet18Model #EfficientNetB3Model
-    use_pretrained: True
-    freeze_params: False
-  heatmap_head:
-    input_num_filter: 128 # EfficientNetB2
-    # input_num_filter: 256 ResNet18
-    output_num_filter: [ 64,1 ]
-    kernel_size: [ 3,1 ]
-  bbox_head:
-    input_num_filter: 128 # EfficientNetB2
-    # input_num_filter: 256 ResNet18
-    output_num_filter: [ 64,2 ]
-    kernel_size: [ 3,1 ]
+loss:
   loss_weight:
     heatmap_head: 10
     bbox_head: 1
-    offset_head: 0
     embedding_head: 1
+  center_scatter_loss: False
+  center_heatmap_loss: True
+  bbox_heatmap_loss: False
+  bbox_scatter_loss: True
 logging:
   root_dir: "/home/psrahul/MasterThesis/repo/Phase6/Outputs/"
   checkpoint_dir: "PASCAL_15_5_1500/Training"

@@ -105,12 +105,12 @@ class SMPTrainer:
         if inference_only == 0:
             bbox_loss = 0
             heatmap_loss = 0
-            if self.cfg["trainer"]["center_heatmap_loss"]:
+            if self.cfg["loss"]["center_heatmap_loss"]:
                 heatmap_loss += calculate_heatmap_loss(
                     output_heatmap, batch["center_heatmap"]
                 )
 
-            if self.cfg["trainer"]["center_scatter_loss"]:
+            if self.cfg["loss"]["center_scatter_loss"]:
                 predicted_center = copy.deepcopy(detections[:, 1:5])
                 predicted_center[:, 0] += predicted_center[:, 2] / 2
                 predicted_center[:, 1] += predicted_center[:, 3] / 2
@@ -124,7 +124,7 @@ class SMPTrainer:
                     device=self.device,
                 )
 
-            if self.cfg["trainer"]["bbox_heatmap_loss"]:
+            if self.cfg["loss"]["bbox_heatmap_loss"]:
                 bbox_loss += calculate_bbox_loss_with_heatmap(
                     predicted_bbox=output_bbox,
                     groundtruth_bbox=batch["bbox_heatmap"],
@@ -132,7 +132,7 @@ class SMPTrainer:
                     num_objects=batch["num_objects"],
                     device=self.device,
                 )
-            if self.cfg["trainer"]["bbox_scatter_loss"]:
+            if self.cfg["loss"]["bbox_scatter_loss"]:
                 bbox_loss += calculate_bbox_loss_without_heatmap(
                     predicted_bbox=output_bbox,
                     groundtruth_bbox=batch["bbox"],
@@ -196,11 +196,11 @@ class SMPTrainer:
                     bbox_loss_weight = 0
 
                     if self.epoch > self.cfg["trainer"]["embedding_loss_start_epoch"]:
-                        embedding_loss_weight = self.cfg["model"]["loss_weight"][
+                        embedding_loss_weight = self.cfg["loss"]["loss_weight"][
                             "embedding_head"
                         ]
                     if self.epoch > self.cfg["trainer"]["bbox_loss_start_epoch"]:
-                        bbox_loss_weight = self.cfg["model"]["loss_weight"]["bbox_head"]
+                        bbox_loss_weight = self.cfg["loss"]["loss_weight"]["bbox_head"]
 
                     for key, value in batch.items():
                         if key != "image_path":
@@ -217,7 +217,7 @@ class SMPTrainer:
                     ) = self.get_model_output_and_loss(batch, split=1)
 
                     heatmap_loss = (
-                        self.cfg["model"]["loss_weight"]["heatmap_head"] * heatmap_loss
+                        self.cfg["loss"]["loss_weight"]["heatmap_head"] * heatmap_loss
                     )
                     bbox_loss = bbox_loss_weight * bbox_loss
                     embedding_loss = embedding_loss_weight * embedding_loss
@@ -308,11 +308,11 @@ class SMPTrainer:
             bbox_loss_weight = 0
             self.model.train()
             if self.epoch > self.cfg["trainer"]["embedding_loss_start_epoch"]:
-                embedding_loss_weight = self.cfg["model"]["loss_weight"][
+                embedding_loss_weight = self.cfg["loss"]["loss_weight"][
                     "embedding_head"
                 ]
             if self.epoch > self.cfg["trainer"]["bbox_loss_start_epoch"]:
-                bbox_loss_weight = self.cfg["model"]["loss_weight"]["bbox_head"]
+                bbox_loss_weight = self.cfg["loss"]["loss_weight"]["bbox_head"]
 
             with tqdm(
                 enumerate(self.train_dataloader, 0), unit=" train batch"
@@ -338,7 +338,7 @@ class SMPTrainer:
                         embedding_loss,
                     ) = self.get_model_output_and_loss(batch, split=0)
                     heatmap_loss = (
-                        self.cfg["model"]["loss_weight"]["heatmap_head"] * heatmap_loss
+                        self.cfg["loss"]["loss_weight"]["heatmap_head"] * heatmap_loss
                     )
                     bbox_loss = bbox_loss_weight * bbox_loss
                     embedding_loss = embedding_loss_weight * embedding_loss
