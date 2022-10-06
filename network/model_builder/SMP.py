@@ -70,18 +70,15 @@ class SMPModel(nn.Module):
         flattened_index = batch["flattened_index"]
 
         x = self.encoder_decoder_model(image)
-        # x = self.decoder_model(self.encoder_model(image))
-        # return x
         output_heatmap = self.heatmap_head(x)
         output_bbox = self.bbox_head(x)
-        # output_bbox = output_bbox_unscaled * self.cfg["heatmap"]["output_dimension"]
         output_roi = self.roi_head(x)
         with torch.no_grad():
             detections = get_bounding_box_prediction(
                 self.cfg, output_heatmap.detach(), output_bbox.detach(), image_id
             )
 
-        if epoch > self.cfg["trainer"]["embedding_loss_start_epoch"]:
+        if epoch > self.cfg["loss"]["embedding_loss_start_epoch"]:
             detections_adjusted = make_detections_valid(self.cfg, detections)
             with torch.no_grad():
                 clip_encoding = self.clip_model(
@@ -108,13 +105,6 @@ class SMPModel(nn.Module):
             clip_encoding,
             model_encodings_normalised,
         )
-
-    def forward_summary(self, image):
-        x = self.encoder_decoder_model(image)
-        output_heatmap = self.heatmap_head(x)
-
-        output_bbox = self.bbox_head(x)
-        return x  # output_heatmap, output_bbox
 
     def print_details(self):
         batch_size = 32

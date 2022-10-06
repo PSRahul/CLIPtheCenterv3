@@ -140,7 +140,7 @@ class SMPTrainer:
                     num_objects=batch["num_objects"],
                     device=self.device,
                 )
-            if self.epoch > self.cfg["trainer"]["embedding_loss_start_epoch"]:
+            if self.epoch > self.cfg["loss"]["embedding_loss_start_epoch"]:
                 embedding_loss = calculate_embedding_loss(
                     predicted_embedding=model_encodings.to(device=self.device),
                     groundtruth_embedding=clip_encoding.to(device=self.device),
@@ -195,11 +195,11 @@ class SMPTrainer:
                     embedding_loss_weight = 0
                     bbox_loss_weight = 0
 
-                    if self.epoch > self.cfg["trainer"]["embedding_loss_start_epoch"]:
+                    if self.epoch > self.cfg["loss"]["embedding_loss_start_epoch"]:
                         embedding_loss_weight = self.cfg["loss"]["loss_weight"][
                             "embedding_head"
                         ]
-                    if self.epoch > self.cfg["trainer"]["bbox_loss_start_epoch"]:
+                    if self.epoch > self.cfg["loss"]["bbox_loss_start_epoch"]:
                         bbox_loss_weight = self.cfg["loss"]["loss_weight"]["bbox_head"]
 
                     for key, value in batch.items():
@@ -307,11 +307,11 @@ class SMPTrainer:
             embedding_loss_weight = 0
             bbox_loss_weight = 0
             self.model.train()
-            if self.epoch > self.cfg["trainer"]["embedding_loss_start_epoch"]:
+            if self.epoch > self.cfg["loss"]["embedding_loss_start_epoch"]:
                 embedding_loss_weight = self.cfg["loss"]["loss_weight"][
                     "embedding_head"
                 ]
-            if self.epoch > self.cfg["trainer"]["bbox_loss_start_epoch"]:
+            if self.epoch > self.cfg["loss"]["bbox_loss_start_epoch"]:
                 bbox_loss_weight = self.cfg["loss"]["loss_weight"]["bbox_head"]
 
             with tqdm(
@@ -423,7 +423,7 @@ class SMPTrainer:
             plt.close("all")
 
             # self.save_model_checkpoint()
-            if (self.epoch % self.cfg["trainer"]["val_save_interval"] == 0) or (
+            if (self.epoch % self.cfg["logging"]["val_save_interval"] == 0) or (
                 self.epoch == self.cfg["trainer"]["num_epochs"] - 1
             ):
                 self.save_model_checkpoint()
