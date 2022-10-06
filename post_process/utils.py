@@ -13,7 +13,6 @@ import cv2
 from torchvision.datasets import CocoDetection
 from tqdm import tqdm
 from yaml.loader import SafeLoader
-from post_process.torchmetric_evaluation import calculate_torchmetrics_mAP
 from post_process.nms import perform_nms
 
 
@@ -25,8 +24,12 @@ def resize_predictions_image_size(cfg, dataset, prediction):
         width_scale = image.shape[1] / cfg["post_processing"]["model_output_shape"]
 
         # columns = [["image_id", "bbox_x", "bbox_y", "w", "h", "score", "class_label"]]
-        prediction[i, 1], prediction[i, 3] = int(prediction[i, 1] * width_scale), int(prediction[i, 3] * width_scale)
-        prediction[i, 2], prediction[i, 4] = int(prediction[i, 2] * height_scale), int(prediction[i, 4] * height_scale)
+        prediction[i, 1], prediction[i, 3] = int(prediction[i, 1] * width_scale), int(
+            prediction[i, 3] * width_scale
+        )
+        prediction[i, 2], prediction[i, 4] = int(prediction[i, 2] * height_scale), int(
+            prediction[i, 4] * height_scale
+        )
     return prediction
 
 

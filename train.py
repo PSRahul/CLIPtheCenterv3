@@ -14,7 +14,7 @@ from trainer.SMP_trainer_module import SMPTrainer
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-c", type=str, default="configs/train_smp.yaml")
+    parser.add_argument("-c", type=str, default="configs/train.yaml")
     args = parser.parse_args()
     return args
 

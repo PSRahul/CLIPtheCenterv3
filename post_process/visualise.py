@@ -13,19 +13,32 @@ import cv2
 from torchvision.datasets import CocoDetection
 from tqdm import tqdm
 from yaml.loader import SafeLoader
-from post_process.torchmetric_evaluation import calculate_torchmetrics_mAP
 from post_process.nms import perform_nms
 import copy
 
 
-def visualise_bbox(cfg, dataset, id, gt=None, pred=None, draw_gt=True, draw_pred=True,
-                   resize_image_to_output_shape=False,checkpoint_dir=None):
+def visualise_bbox(
+    cfg,
+    dataset,
+    id,
+    gt=None,
+    pred=None,
+    draw_gt=True,
+    draw_pred=True,
+    resize_image_to_output_shape=False,
+    checkpoint_dir=None,
+):
     image = dataset._load_image(id)
 
     image = np.array(image)
-    if (resize_image_to_output_shape):
-        image = cv2.resize(image,
-                           (cfg["post_processing"]["model_output_shape"], cfg["post_processing"]["model_output_shape"]))
+    if resize_image_to_output_shape:
+        image = cv2.resize(
+            image,
+            (
+                cfg["post_processing"]["model_output_shape"],
+                cfg["post_processing"]["model_output_shape"],
+            ),
+        )
 
     fig, ax = plt.subplots()
     ax.imshow(image)
@@ -36,9 +49,13 @@ def visualise_bbox(cfg, dataset, id, gt=None, pred=None, draw_gt=True, draw_pred
         for i in range(predictions_image.shape[0]):
             bbox_i = predictions_image[i, 1:5]
             rect = patches.Rectangle(
-                (bbox_i[0], bbox_i[1]), bbox_i[2],
-                bbox_i[3], linewidth=2, edgecolor='r',
-                facecolor='none')
+                (bbox_i[0], bbox_i[1]),
+                bbox_i[2],
+                bbox_i[3],
+                linewidth=2,
+                edgecolor="r",
+                facecolor="none",
+            )
             ax.add_patch(rect)
 
     if draw_gt:
@@ -47,12 +64,22 @@ def visualise_bbox(cfg, dataset, id, gt=None, pred=None, draw_gt=True, draw_pred
         for i in range(gt_image.shape[0]):
             bbox_i = gt_image[i, 1:5]
             rect = patches.Rectangle(
-                (bbox_i[0], bbox_i[1]), bbox_i[2],
-                bbox_i[3], linewidth=2, edgecolor='b',
-                facecolor='none')
+                (bbox_i[0], bbox_i[1]),
+                bbox_i[2],
+                bbox_i[3],
+                linewidth=2,
+                edgecolor="b",
+                facecolor="none",
+            )
             ax.add_patch(rect)
-    print(id," | Number of Predictions | ", predictions_image.shape[0]," | Number of GroundTruth Objects | ", gt_image.shape[0])
-    #plt.show()
-    os.makedirs(os.path.join(checkpoint_dir,"images"), exist_ok=True)
-    plt.savefig(os.path.join(checkpoint_dir,"images",str(id)+".png"))
+    print(
+        id,
+        " | Number of Predictions | ",
+        predictions_image.shape[0],
+        " | Number of GroundTruth Objects | ",
+        gt_image.shape[0],
+    )
+    # plt.show()
+    os.makedirs(os.path.join(checkpoint_dir, "images"), exist_ok=True)
+    plt.savefig(os.path.join(checkpoint_dir, "images", str(id) + ".png"))
     plt.close("all")
