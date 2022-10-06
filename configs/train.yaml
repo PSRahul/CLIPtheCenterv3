@@ -1,5 +1,5 @@
 version: 0
-train: True
+train: False
 test: True
 
 dataset_class_debug: False
@@ -12,19 +12,19 @@ test_parameters:
   save_test_outputs: True
 
 trainer:
-  num_epochs: 1000
+  num_epochs: 600
   resume_training: False
-  train_checkpoint: "/home/psrahul/MasterThesis/repo/Phase5/Outputs/PASCAL_15_5_1500/Training/Unetresnet50/04102022_1541/epoch-35-loss-0.0030628.pth"
-  test_checkpoint: "/home/psrahul/Desktop/temp/epoch-635-loss-30.4418410.pth"
+  train_checkpoint: "/home/psrahul/MasterThesis/repo/Phase6/Outputs/PASCAL_3_2_10_SA/Training/DeepLabV3Plusefficientnet-b3/06102022_1001/epoch-300-loss-160.7034163.pth"
+  test_checkpoint: "/home/psrahul/MasterThesis/repo/Phase6/Outputs/PASCAL_3_2_10_SA/Training/DeepLabV3Plusefficientnet-b2/06102022_1157/epoch-500-loss-30.0053769.pth"
 
 data:
-  train_data_root: "/home/psrahul/MasterThesis/datasets/PASCAL_15_5_1500/base_classes/train/coco/"
-  val_data_root: "/home/psrahul/MasterThesis/datasets/PASCAL_15_5_1500/base_classes/val/coco/"
-  test_data_root: "/home/psrahul/MasterThesis/datasets/PASCAL_15_5_1500/base_classes/train/coco/"
+  train_data_root: "/home/psrahul/MasterThesis/datasets/PASCAL_3_2_10/base_classes/train/coco/"
+  val_data_root: "/home/psrahul/MasterThesis/datasets/PASCAL_3_2_10/base_classes/val/coco/"
+  test_data_root: "/home/psrahul/MasterThesis/datasets/PASCAL_3_2_10/base_classes/train/coco/"
   train_aug: False
   train_batch_size: 4 
   val_batch_size: 4 
-  test_batch_size: 3     
+  test_batch_size: 1
   input_dimension: 320 
  
 heatmap:
@@ -34,8 +34,8 @@ heatmap:
   fix_radius_value: 5
 
 smp:
-  model: "Unet" #Unet" #"Unet" #DeepLabV3Plus"
-  encoder_name: "resnet50" #"resnet50" #"mobilenet_v2
+  model: "DeepLabV3Plus" #Unet" #"Unet" #DeepLabV3Plus"
+  encoder_name: "efficientnet-b2" #"resnet50" #"mobilenet_v2
   encoder_weights: "imagenet" #"imagenet" #"swsl" #imagenet"
   decoder_output_classes: 16 #256 #16
   decoder_output_dimension: 320
@@ -43,7 +43,7 @@ smp:
 
 loss:
   loss_weight:
-    heatmap_head: 10
+    heatmap_head: 1
     bbox_head: 1
     embedding_head: 1
   center_scatter_loss: False
@@ -55,11 +55,11 @@ loss:
 
 logging:
   root_dir: "/home/psrahul/MasterThesis/repo/Phase6/Outputs/"
-  checkpoint_dir: "PASCAL_15_5_1500/Training"
+  checkpoint_dir: "PASCAL_3_2_10_SA/Training"
   display_log_fraction: 1
-  val_save_interval: 5
+  val_save_interval: 50
 
 evaluation:
   heatmap_pooling_kernel: 3
   topk_k: 5
-  test_topk_k: 1
+  test_topk_k: 5

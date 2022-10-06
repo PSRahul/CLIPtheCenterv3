@@ -35,7 +35,7 @@ class SMP_RoIHead(nn.Module):
                 padding=1,
 
             ))
-        layers.append(nn.Sigmoid())
+        #layers.append(nn.Sigmoid())
         self.model = nn.Sequential(*layers)
 
     def forward(self, x):

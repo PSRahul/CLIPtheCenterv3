@@ -1,11 +1,11 @@
 data:
-  root: "/home/psrahul/MasterThesis/datasets/PASCAL_15_5_1500/base_classes/train/coco/"
+  root: "/home/psrahul/MasterThesis/datasets/PASCAL_3_2_10/base_classes/train/coco/"
 
-prediction_path: "/home/psrahul/MasterThesis/repo/Phase5/Outputs/PASCAL_15_5_1500/Training/Unetresnet50/05102022_1932/bbox_predictions.npy"
+prediction_path: "/home/psrahul/MasterThesis/repo/Phase6/Outputs/PASCAL_3_2_10_SA/Training/DeepLabV3Plusefficientnet-b2/06102022_1225/bbox_predictions.npy"
 
-generate_clip_embedding: True
-clip_embedding_root: "/home/psrahul/MasterThesis/datasets/BBoxGroundtruths/PASCAL_3_2/train/"
-clip_embedding_path: "/home/psrahul/MasterThesis/datasets/PASCAL_2012_ZETA_CA/support_images/base_classes/val/clip_embeddings.npy"
+generate_clip_embedding: False
+clip_embedding_root: "/home/psrahul/MasterThesis/datasets/BBoxGroundtruths/PASCAL_15_5/train/"
+clip_embedding_path: "/home/psrahul/MasterThesis/datasets/PASCAL_2012_ZETA_CA/support_images/base_classes/train/clip_embeddings.npy"
 
 use_metric_data_path: False
 metric_data_path: "/home/psrahul/MasterThesis/repo/Phase5/Outputs/PASCAL_3_2/metrics/03102022_1811/data.npz"
@@ -19,4 +19,4 @@ post_processing:
 
 logging:
   root_dir: "/home/psrahul/MasterThesis/repo/Phase6/Outputs/"
-  checkpoint_dir: "PASCAL_15_5_1500/metrics/"
+  checkpoint_dir: "PASCAL_3_2_10/metrics/"

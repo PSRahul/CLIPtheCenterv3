@@ -37,7 +37,7 @@ def get_masked_heatmaps(cfg, roi_heatmap, binary_mask, split=0):
     return masked_roi_heatmaps
 
 
-def make_detections_valid(cfg, detections):
+def make_detections_valid_old(cfg, detections):
     detections_valid = copy.deepcopy(detections)
     detections_valid[detections_valid[:, 3] <= 10, 3] = 10
     detections_valid[detections_valid[:, 4] <= 10, 4] = 10
@@ -56,6 +56,27 @@ def make_detections_valid(cfg, detections):
         if y > cfg["heatmap"]["output_dimension"] - 1:
             detections_valid[i, 4] = (
                 cfg["heatmap"]["output_dimension"] - 1 - detections_valid[i, 2]
+            )
+
+    return detections_valid
+
+def make_detections_valid(cfg, detections):
+    detections_valid = copy.deepcopy(detections)
+    detections_valid[detections_valid[:, 1] <= 0, 1] = 0
+    detections_valid[detections_valid[:,2] <= 0, 2] = 0
+    detections_valid[detections_valid[:, 3] <= 25, 3] = 25
+    detections_valid[detections_valid[:, 4] <= 25, 4] = 25
+    for i in range(detections.shape[0]):
+        x = detections_valid[i, 1] + detections_valid[i, 3]
+        y = detections_valid[i, 2] + detections_valid[i, 4]
+
+        if x > cfg["heatmap"]["output_dimension"] - 1:
+            detections_valid[i, 1] = (
+                cfg["heatmap"]["output_dimension"] - 1 - detections_valid[i, 3]
+            )
+        if y > cfg["heatmap"]["output_dimension"] - 1:
+            detections_valid[i, 2] = (
+                cfg["heatmap"]["output_dimension"] - 1 - detections_valid[i, 4]
             )
 
     return detections_valid

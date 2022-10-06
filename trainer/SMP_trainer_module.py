@@ -235,10 +235,10 @@ class SMPTrainer:
                         val_embedding_loss=running_val_embedding_loss,
                     )
 
-            running_val_heatmap_loss /= len(self.val_dataloader)
-            running_val_bbox_loss /= len(self.val_dataloader)
-            running_val_embedding_loss /= len(self.val_dataloader)
-            running_val_loss /= len(self.val_dataloader)
+            running_val_heatmap_loss /= (len(self.val_dataloader)*self.cfg["data"]["val_batch_size"])
+            running_val_bbox_loss /= (len(self.val_dataloader)*self.cfg["data"]["val_batch_size"])
+            running_val_embedding_loss /= (len(self.val_dataloader)*self.cfg["data"]["val_batch_size"])
+            running_val_loss /= (len(self.val_dataloader)*self.cfg["data"]["val_batch_size"])
 
             self.running_val_loss = running_val_loss
             self.writer.add_scalar("val loss", running_val_loss, self.epoch)
@@ -363,10 +363,10 @@ class SMPTrainer:
                         embedding_loss=running_embedding_loss,
                     )
 
-            running_heatmap_loss /= len(self.train_dataloader)
-            running_bbox_loss /= len(self.train_dataloader)
-            running_embedding_loss /= len(self.train_dataloader)
-            running_loss /= len(self.train_dataloader)
+            running_heatmap_loss /= (len(self.train_dataloader)*self.cfg["data"]["train_batch_size"])
+            running_bbox_loss /= (len(self.train_dataloader)*self.cfg["data"]["train_batch_size"])
+            running_embedding_loss /= (len(self.train_dataloader)*self.cfg["data"]["train_batch_size"])
+            running_loss /= (len(self.train_dataloader)*self.cfg["data"]["train_batch_size"])
 
             # ...log the running loss
 
