@@ -9,6 +9,7 @@ class SMP_BBoxHead(nn.Module):
         super().__init__()
         self.bbox_w_model = self.get_model(cfg)
         self.bbox_h_model = self.get_model(cfg)
+        self.cfg=cfg
 
     def get_model(self, cfg):
         layers = []
@@ -50,7 +51,7 @@ class SMP_BBoxHead(nn.Module):
         w_heatmap = self.bbox_w_model.forward(x)
         h_heatmap = self.bbox_h_model.forward(x)
         heatmap = torch.cat([w_heatmap, h_heatmap], dim=1)
-
+        heatmap=torch.clip(heatmap,0,self.cfg["heatmap"]["output_dimension"])
         return heatmap
 
     def print_details(self):

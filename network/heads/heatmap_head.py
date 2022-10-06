@@ -39,12 +39,13 @@ class SMP_HeatMapHead(nn.Module):
                 padding=1,
 
             ))
-        layers.append(nn.ReLU(inplace=True))
+        layers.append(nn.Sigmoid())
         self.model = nn.Sequential(*layers)
 
     def forward(self, x):
         x = self.model.forward(x)
-        return x
+        heatmap = torch.clip(x, 0, 1.0)
+        return heatmap
         #x_like = torch.zeros_like(x)
         #y = torch.max(x.view(x.shape[0], -1), dim=1)[0]
         #for i in range(x.shape[0]):
