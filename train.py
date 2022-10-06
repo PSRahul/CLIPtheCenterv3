@@ -8,10 +8,7 @@ import yaml
 from yaml.loader import SafeLoader
 
 from data.dataset_module import DataModule
-from network.model_builder.EffcientNet_ConvT import EfficientnetConv2DTModel
 from network.model_builder.SMP import SMPModel
-from network.model_builder.ResNet import ResNetModel
-from trainer.EfficientnetConv2DT_trainer_module import EfficientnetConv2DTTrainer
 from trainer.SMP_trainer_module import SMPTrainer
 
 
@@ -47,7 +44,8 @@ def set_logging(cfg):
     date_save_string = now.strftime("%d%m%Y_%H%M")
     checkpoint_dir = os.path.join(
         cfg["logging"]["root_dir"],
-        cfg["logging"]["checkpoint_dir"], cfg["smp"]["model"] + cfg["smp"]["encoder_name"],
+        cfg["logging"]["checkpoint_dir"],
+        cfg["smp"]["model"] + cfg["smp"]["encoder_name"],
         date_save_string,
     )
     print(checkpoint_dir)
@@ -60,13 +58,17 @@ def main(cfg):
     detection_model = SMPModel(cfg)
     print(detection_model.print_details())
     coco_dataset = DataModule(cfg)
-    trainer = SMPTrainer(cfg=cfg, checkpoint_dir=checkpoint_dir, model=detection_model,
-                         train_dataloader=coco_dataset.load_train_dataloader(),
-                         val_dataloader=coco_dataset.load_val_dataloader(),
-                         test_dataloader=coco_dataset.load_test_dataloader())
-    if (cfg["train"]):
+    trainer = SMPTrainer(
+        cfg=cfg,
+        checkpoint_dir=checkpoint_dir,
+        model=detection_model,
+        train_dataloader=coco_dataset.load_train_dataloader(),
+        val_dataloader=coco_dataset.load_val_dataloader(),
+        test_dataloader=coco_dataset.load_test_dataloader(),
+    )
+    if cfg["train"]:
         trainer.train()
-    if (cfg["test"]):
+    if cfg["test"]:
         trainer.test()
 
 

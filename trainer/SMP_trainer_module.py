@@ -7,9 +7,11 @@ import torch.optim as optim
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 
-from loss.bbox_loss import calculate_bbox_loss_without_heatmap, calculate_bbox_loss_with_heatmap
-from loss.heatmap_loss import calculate_heatmap_loss,calculate_heatmap_scatter_loss
-from loss.offset_loss import calculate_offset_loss
+from loss.bbox_loss import (
+    calculate_bbox_loss_without_heatmap,
+    calculate_bbox_loss_with_heatmap,
+)
+from loss.heatmap_loss import calculate_heatmap_loss, calculate_heatmap_scatter_loss
 from trainer.trainer_visualisation import plot_heatmaps, save_test_outputs
 from loss.similarity_loss import calculate_embedding_loss
 import numpy as np
@@ -20,11 +22,18 @@ import pandas as pd
 # torch.backends.cudnn.allow_tf32 = True
 
 
-class SMPTrainer():
-
-    def __init__(self, cfg, checkpoint_dir, model, train_dataloader, val_dataloader, test_dataloader):
+class SMPTrainer:
+    def __init__(
+        self,
+        cfg,
+        checkpoint_dir,
+        model,
+        train_dataloader,
+        val_dataloader,
+        test_dataloader,
+    ):
         self.writer = SummaryWriter(checkpoint_dir)
-        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.log_interval = cfg["logging"]["display_log_fraction"]
         self.cfg = cfg
         self.model = model
@@ -43,89 +52,132 @@ class SMPTrainer():
         self.f.close()
 
     def set_training_parameters(self):
-        self.optimizer = optim.Adam(self.model.parameters(),lr=1e-5)
+        self.optimizer = optim.Adam(self.model.parameters(), lr=1e-5)
 
-    def load_checkpoint(self,key="train_checkpoint"):
+    def load_checkpoint(self, key="train_checkpoint"):
         # TODO: The training losses do not adjust after loading
         checkpoint = torch.load(self.cfg["trainer"][key])
         print("Loaded Trainer State from ", self.cfg["trainer"][key])
-        self.model.load_state_dict(checkpoint['model_state_dict'])
-        self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        self.model.load_state_dict(checkpoint["model_state_dict"])
+        self.optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
         for state in self.optimizer.state.values():
             for k, v in state.items():
                 if isinstance(v, torch.Tensor):
                     state[k] = v.cuda()
-        self.epoch = checkpoint['epoch']
-        self.loss = checkpoint['loss']
+        self.epoch = checkpoint["epoch"]
+        self.loss = checkpoint["loss"]
         # self.model = torch.load(self.cfg["trainer"]["checkpoint_path"] + "model")
 
     def save_model_checkpoint(self):
-        model_save_name = 'epoch-{}-loss-{:.7f}.pth'.format(self.epoch, self.running_loss)
-        torch.save({
-            'epoch': self.epoch + 1,
-            'model_state_dict': self.model.state_dict(),
-            'optimizer_state_dict': self.optimizer.state_dict(),
-            'loss': self.loss
-
-        }, os.path.join(self.checkpoint_dir, model_save_name))
+        model_save_name = "epoch-{}-loss-{:.7f}.pth".format(
+            self.epoch, self.running_loss
+        )
+        torch.save(
+            {
+                "epoch": self.epoch + 1,
+                "model_state_dict": self.model.state_dict(),
+                "optimizer_state_dict": self.optimizer.state_dict(),
+                "loss": self.loss,
+            },
+            os.path.join(self.checkpoint_dir, model_save_name),
+        )
 
     def check_model_load(self):
-        checkpoint = torch.load(self.cfg["trainer"]["checkpoint_path"], map_location="cuda:0")
+        checkpoint = torch.load(
+            self.cfg["trainer"]["checkpoint_path"], map_location="cuda:0"
+        )
         print("Loaded Trainer State from ", self.cfg["trainer"]["checkpoint_path"])
-        print(self.model.state_dict()['bbox_head.model.2.bias'])
-        print(self.optimizer.state_dict()['state'])
+        print(self.model.state_dict()["bbox_head.model.2.bias"])
+        print(self.optimizer.state_dict()["state"])
         self.load_checkpoint()
-        print(self.model.state_dict()['bbox_head.model.2.bias'])
+        print(self.model.state_dict()["bbox_head.model.2.bias"])
 
-    def get_model_output_and_loss(self, batch, split,inference_only=0):
+    def get_model_output_and_loss(self, batch, split, inference_only=0):
 
-        output_heatmap, output_bbox, detections, clip_encoding, model_encodings = self.model(
-            batch,self.epoch, split)
+        (
+            output_heatmap,
+            output_bbox,
+            detections,
+            clip_encoding,
+            model_encodings,
+        ) = self.model(batch, self.epoch, split)
         output_heatmap = output_heatmap.squeeze(dim=1).to(self.device)
-        if(inference_only==0):
+        if inference_only == 0:
             bbox_loss = 0
-            heatmap_loss=0
-            if (self.cfg["trainer"]["center_heatmap_loss"]):
-                heatmap_loss += calculate_heatmap_loss(output_heatmap, batch["center_heatmap"])
+            heatmap_loss = 0
+            if self.cfg["trainer"]["center_heatmap_loss"]:
+                heatmap_loss += calculate_heatmap_loss(
+                    output_heatmap, batch["center_heatmap"]
+                )
 
-            if (self.cfg["trainer"]["center_scatter_loss"]):
-                predicted_center=copy.deepcopy(detections[:,1:5])
-                predicted_center[:,0]+=predicted_center[:,2]/2
+            if self.cfg["trainer"]["center_scatter_loss"]:
+                predicted_center = copy.deepcopy(detections[:, 1:5])
+                predicted_center[:, 0] += predicted_center[:, 2] / 2
                 predicted_center[:, 1] += predicted_center[:, 3] / 2
-                predicted_center=predicted_center[:,0:2]
-                predicted_center=predicted_center.reshape(batch['bbox'].shape)
-                heatmap_loss+=calculate_heatmap_scatter_loss(predicted_heatmap=predicted_center,
-                                                              groundtruth_heatmap=batch['object_center'],
-                                                              flattened_index=batch['flattened_index'],
-                                                              num_objects=batch['num_objects'],
-                                                              device=self.device)
+                predicted_center = predicted_center[:, 0:2]
+                predicted_center = predicted_center.reshape(batch["bbox"].shape)
+                heatmap_loss += calculate_heatmap_scatter_loss(
+                    predicted_heatmap=predicted_center,
+                    groundtruth_heatmap=batch["object_center"],
+                    flattened_index=batch["flattened_index"],
+                    num_objects=batch["num_objects"],
+                    device=self.device,
+                )
 
-            if (self.cfg["trainer"]["bbox_heatmap_loss"]):
-                bbox_loss += calculate_bbox_loss_with_heatmap(predicted_bbox=output_bbox,
-                                                              groundtruth_bbox=batch['bbox_heatmap'],
-                                                              flattened_index=batch['flattened_index'],
-                                                              num_objects=batch['num_objects'],
-                                                              device=self.device)
-            if (self.cfg["trainer"]["bbox_scatter_loss"]):
-                bbox_loss += calculate_bbox_loss_without_heatmap(predicted_bbox=output_bbox,
-                                                                 groundtruth_bbox=batch['bbox'],
-                                                                 flattened_index=batch['flattened_index'],
-                                                                 num_objects=batch['num_objects'],
-                                                                 device=self.device)
-            if (self.epoch > self.cfg["trainer"]["embedding_loss_start_epoch"]):
-                embedding_loss = calculate_embedding_loss(predicted_embedding=model_encodings.to(device=self.device),
-                                                      groundtruth_embedding=clip_encoding.to(device=self.device),
-                                                      flattened_index=batch['flattened_index'],
-                                                      num_objects=batch['num_objects'])
+            if self.cfg["trainer"]["bbox_heatmap_loss"]:
+                bbox_loss += calculate_bbox_loss_with_heatmap(
+                    predicted_bbox=output_bbox,
+                    groundtruth_bbox=batch["bbox_heatmap"],
+                    flattened_index=batch["flattened_index"],
+                    num_objects=batch["num_objects"],
+                    device=self.device,
+                )
+            if self.cfg["trainer"]["bbox_scatter_loss"]:
+                bbox_loss += calculate_bbox_loss_without_heatmap(
+                    predicted_bbox=output_bbox,
+                    groundtruth_bbox=batch["bbox"],
+                    flattened_index=batch["flattened_index"],
+                    num_objects=batch["num_objects"],
+                    device=self.device,
+                )
+            if self.epoch > self.cfg["trainer"]["embedding_loss_start_epoch"]:
+                embedding_loss = calculate_embedding_loss(
+                    predicted_embedding=model_encodings.to(device=self.device),
+                    groundtruth_embedding=clip_encoding.to(device=self.device),
+                    flattened_index=batch["flattened_index"],
+                    num_objects=batch["num_objects"],
+                )
             else:
-                embedding_loss = calculate_embedding_loss(predicted_embedding=torch.ones((self.cfg["data"]["train_batch_size"]*self.cfg["evaluation"]["topk_k"],1)).to(device=self.device),
-                                                          groundtruth_embedding=torch.ones((self.cfg["data"]["train_batch_size"]*self.cfg["evaluation"]["topk_k"],1)).to(device=self.device),
-                                                          flattened_index=batch['flattened_index'],
-                                                          num_objects=batch['num_objects'])
+                embedding_loss = calculate_embedding_loss(
+                    predicted_embedding=torch.ones(
+                        (
+                            self.cfg["data"]["train_batch_size"]
+                            * self.cfg["evaluation"]["topk_k"],
+                            1,
+                        )
+                    ).to(device=self.device),
+                    groundtruth_embedding=torch.ones(
+                        (
+                            self.cfg["data"]["train_batch_size"]
+                            * self.cfg["evaluation"]["topk_k"],
+                            1,
+                        )
+                    ).to(device=self.device),
+                    flattened_index=batch["flattened_index"],
+                    num_objects=batch["num_objects"],
+                )
 
         else:
-            heatmap_loss, bbox_loss, embedding_loss=0,0,0
-        return output_heatmap, output_bbox, detections, model_encodings, heatmap_loss, bbox_loss, embedding_loss
+            heatmap_loss, bbox_loss, embedding_loss = 0, 0, 0
+        return (
+            output_heatmap,
+            output_bbox,
+            detections,
+            model_encodings,
+            heatmap_loss,
+            bbox_loss,
+            embedding_loss,
+        )
 
     def val(self):
         self.model.eval()
@@ -143,19 +195,30 @@ class SMPTrainer():
                     embedding_loss_weight = 0
                     bbox_loss_weight = 0
 
-                    if (self.epoch > self.cfg["trainer"]["embedding_loss_start_epoch"]):
-                        embedding_loss_weight = self.cfg["model"]["loss_weight"]["embedding_head"]
-                    if (self.epoch > self.cfg["trainer"]["bbox_loss_start_epoch"]):
+                    if self.epoch > self.cfg["trainer"]["embedding_loss_start_epoch"]:
+                        embedding_loss_weight = self.cfg["model"]["loss_weight"][
+                            "embedding_head"
+                        ]
+                    if self.epoch > self.cfg["trainer"]["bbox_loss_start_epoch"]:
                         bbox_loss_weight = self.cfg["model"]["loss_weight"]["bbox_head"]
 
                     for key, value in batch.items():
                         if key != "image_path":
                             batch[key] = batch[key].to(self.device)
 
-                    output_heatmap, output_bbox, detections, model_encodings, heatmap_loss, bbox_loss, embedding_loss = self.get_model_output_and_loss(
-                        batch, split=1)
+                    (
+                        output_heatmap,
+                        output_bbox,
+                        detections,
+                        model_encodings,
+                        heatmap_loss,
+                        bbox_loss,
+                        embedding_loss,
+                    ) = self.get_model_output_and_loss(batch, split=1)
 
-                    heatmap_loss = self.cfg["model"]["loss_weight"]["heatmap_head"] * heatmap_loss
+                    heatmap_loss = (
+                        self.cfg["model"]["loss_weight"]["heatmap_head"] * heatmap_loss
+                    )
                     bbox_loss = bbox_loss_weight * bbox_loss
                     embedding_loss = embedding_loss_weight * embedding_loss
                     loss = heatmap_loss + bbox_loss + embedding_loss
@@ -165,10 +228,12 @@ class SMPTrainer():
                     running_val_embedding_loss = embedding_loss.item()
                     running_val_loss += loss.item()
 
-                    tepoch.set_postfix(val_loss=running_val_loss,
-                                       val_heatmap_loss=running_val_heatmap_loss ,
-                                       val_bbox_loss=running_val_bbox_loss ,
-                                       val_embedding_loss=running_val_embedding_loss )
+                    tepoch.set_postfix(
+                        val_loss=running_val_loss,
+                        val_heatmap_loss=running_val_heatmap_loss,
+                        val_bbox_loss=running_val_bbox_loss,
+                        val_embedding_loss=running_val_embedding_loss,
+                    )
 
             running_val_heatmap_loss /= len(self.val_dataloader)
             running_val_bbox_loss /= len(self.val_dataloader)
@@ -176,49 +241,61 @@ class SMPTrainer():
             running_val_loss /= len(self.val_dataloader)
 
             self.running_val_loss = running_val_loss
-            self.writer.add_scalar('val loss',
-                                   running_val_loss,
-                                   self.epoch )
-            self.writer.add_scalar('val heatmap loss',
-                                   running_val_heatmap_loss,
-                                   self.epoch )
-            self.writer.add_scalar('val bbox loss',
-                                   running_val_bbox_loss,
-                                   self.epoch )
-            self.writer.add_scalar('val embedding loss',
-                                   running_val_embedding_loss,
-                                   self.epoch )
+            self.writer.add_scalar("val loss", running_val_loss, self.epoch)
+            self.writer.add_scalar(
+                "val heatmap loss", running_val_heatmap_loss, self.epoch
+            )
+            self.writer.add_scalar("val bbox loss", running_val_bbox_loss, self.epoch)
+            self.writer.add_scalar(
+                "val embedding loss", running_val_embedding_loss, self.epoch
+            )
 
-            self.writer.add_figure('Validation Center HeatMap Visualisation',
-                                   plot_heatmaps(predicted_heatmap=output_heatmap.cpu().detach().numpy(),
-                                                 groundtruth_heatmap=batch[
-                                                     "center_heatmap"].cpu().detach().numpy()),
-                                   global_step=self.epoch )
-            self.writer.add_figure('Validation BBox Width HeatMap Visualisation',
-                                   plot_heatmaps(predicted_heatmap=output_bbox[:, 0, :, :].cpu().detach().numpy(),
-                                                 groundtruth_heatmap=batch[
-                                                                         "bbox_heatmap"][:, 0, :,
-                                                                     :].cpu().detach().numpy()),
-                                   global_step=self.epoch )
-            self.writer.add_figure('Validation BBox Height HeatMap Visualisation',
-                                   plot_heatmaps(predicted_heatmap=output_bbox[:, 1, :, :].cpu().detach().numpy(),
-                                                 groundtruth_heatmap=batch[
-                                                                         "bbox_heatmap"][:, 1, :,
-                                                                     :].cpu().detach().numpy()),
-                                   global_step=self.epoch )
+            self.writer.add_figure(
+                "Validation Center HeatMap Visualisation",
+                plot_heatmaps(
+                    predicted_heatmap=output_heatmap.cpu().detach().numpy(),
+                    groundtruth_heatmap=batch["center_heatmap"].cpu().detach().numpy(),
+                ),
+                global_step=self.epoch,
+            )
+            self.writer.add_figure(
+                "Validation BBox Width HeatMap Visualisation",
+                plot_heatmaps(
+                    predicted_heatmap=output_bbox[:, 0, :, :].cpu().detach().numpy(),
+                    groundtruth_heatmap=batch["bbox_heatmap"][:, 0, :, :]
+                    .cpu()
+                    .detach()
+                    .numpy(),
+                ),
+                global_step=self.epoch,
+            )
+            self.writer.add_figure(
+                "Validation BBox Height HeatMap Visualisation",
+                plot_heatmaps(
+                    predicted_heatmap=output_bbox[:, 1, :, :].cpu().detach().numpy(),
+                    groundtruth_heatmap=batch["bbox_heatmap"][:, 1, :, :]
+                    .cpu()
+                    .detach()
+                    .numpy(),
+                ),
+                global_step=self.epoch,
+            )
 
-            file_save_string = 'val epoch {} -|- global_step {} '.format(self.epoch,
-                                                                         self.epoch * len(
-                                                                             self.val_dataloader) + i)
-            file_save_string += 'loss {:.7f} -|- heatmap_loss {:.7f} -|- bbox_loss {:.7f} -|- embedding_loss {:.7f} \n'.format(
+            file_save_string = "val epoch {} -|- global_step {} ".format(
+                self.epoch, self.epoch * len(self.val_dataloader) + i
+            )
+            file_save_string += "loss {:.7f} -|- heatmap_loss {:.7f} -|- bbox_loss {:.7f} -|- embedding_loss {:.7f} \n".format(
                 running_val_loss,
                 running_val_heatmap_loss,
                 running_val_bbox_loss,
-                running_val_embedding_loss)
+                running_val_embedding_loss,
+            )
             # 'val loss-{:.7f}.pth'.format(self.epoch, self.running_loss)
             self.f.write(file_save_string)
 
-    def train(self, ):
+    def train(
+        self,
+    ):
 
         self.model.to(self.device)
         torch.autograd.set_detect_anomaly(True)
@@ -230,12 +307,16 @@ class SMPTrainer():
             embedding_loss_weight = 0
             bbox_loss_weight = 0
             self.model.train()
-            if (self.epoch > self.cfg["trainer"]["embedding_loss_start_epoch"]):
-                embedding_loss_weight = self.cfg["model"]["loss_weight"]["embedding_head"]
-            if (self.epoch > self.cfg["trainer"]["bbox_loss_start_epoch"]):
+            if self.epoch > self.cfg["trainer"]["embedding_loss_start_epoch"]:
+                embedding_loss_weight = self.cfg["model"]["loss_weight"][
+                    "embedding_head"
+                ]
+            if self.epoch > self.cfg["trainer"]["bbox_loss_start_epoch"]:
                 bbox_loss_weight = self.cfg["model"]["loss_weight"]["bbox_head"]
 
-            with tqdm(enumerate(self.train_dataloader, 0), unit=" train batch") as tepoch:
+            with tqdm(
+                enumerate(self.train_dataloader, 0), unit=" train batch"
+            ) as tepoch:
                 for i, batch in tepoch:
                     tepoch.set_description(f"Epoch {self.epoch}")
 
@@ -247,9 +328,18 @@ class SMPTrainer():
                     # 10
                     self.model.train()
                     self.optimizer.zero_grad()
-                    output_heatmap, output_bbox, detections, model_encodings, heatmap_loss, bbox_loss, embedding_loss = self.get_model_output_and_loss(
-                        batch, split=0)
-                    heatmap_loss = self.cfg["model"]["loss_weight"]["heatmap_head"] * heatmap_loss
+                    (
+                        output_heatmap,
+                        output_bbox,
+                        detections,
+                        model_encodings,
+                        heatmap_loss,
+                        bbox_loss,
+                        embedding_loss,
+                    ) = self.get_model_output_and_loss(batch, split=0)
+                    heatmap_loss = (
+                        self.cfg["model"]["loss_weight"]["heatmap_head"] * heatmap_loss
+                    )
                     bbox_loss = bbox_loss_weight * bbox_loss
                     embedding_loss = embedding_loss_weight * embedding_loss
                     self.loss = heatmap_loss + bbox_loss + embedding_loss
@@ -266,11 +356,12 @@ class SMPTrainer():
                     self.optimizer.step()
 
                     # 70
-                    tepoch.set_postfix(loss=running_loss,
-                                       heatmap_loss=running_heatmap_loss,
-                                       bbox_loss=running_bbox_loss,
-
-                                       embedding_loss=running_embedding_loss)
+                    tepoch.set_postfix(
+                        loss=running_loss,
+                        heatmap_loss=running_heatmap_loss,
+                        bbox_loss=running_bbox_loss,
+                        embedding_loss=running_embedding_loss,
+                    )
 
             running_heatmap_loss /= len(self.train_dataloader)
             running_bbox_loss /= len(self.train_dataloader)
@@ -280,55 +371,61 @@ class SMPTrainer():
             # ...log the running loss
 
             self.running_loss = running_loss
-            self.writer.add_scalar('loss',
-                                   running_loss,
-                                   self.epoch )
-            self.writer.add_scalar('heatmap loss',
-                                   running_heatmap_loss,
-                                   self.epoch )
-            self.writer.add_scalar('bbox loss',
-                                   running_bbox_loss,
-                                   self.epoch )
-            self.writer.add_scalar('embedding loss',
-                                   running_embedding_loss,
-                                   self.epoch )
+            self.writer.add_scalar("loss", running_loss, self.epoch)
+            self.writer.add_scalar("heatmap loss", running_heatmap_loss, self.epoch)
+            self.writer.add_scalar("bbox loss", running_bbox_loss, self.epoch)
+            self.writer.add_scalar("embedding loss", running_embedding_loss, self.epoch)
 
-            self.writer.add_figure('Center HeatMap Visualisation',
-                                   plot_heatmaps(predicted_heatmap=output_heatmap.cpu().detach().numpy(),
-                                                 groundtruth_heatmap=batch[
-                                                     "center_heatmap"].cpu().detach().numpy(),
-                                                 sigmoid=True),
-                                   global_step=self.epoch )
-            self.writer.add_figure('BBox HeatMap Width Visualisation',
-                                   plot_heatmaps(
-                                       predicted_heatmap=output_bbox[:, 0, :, :].cpu().detach().numpy(),
-                                       groundtruth_heatmap=batch[
-                                                               "bbox_heatmap"][:, 0, :,
-                                                           :].cpu().detach().numpy()),
-                                   global_step=self.epoch)
+            self.writer.add_figure(
+                "Center HeatMap Visualisation",
+                plot_heatmaps(
+                    predicted_heatmap=output_heatmap.cpu().detach().numpy(),
+                    groundtruth_heatmap=batch["center_heatmap"].cpu().detach().numpy(),
+                    sigmoid=True,
+                ),
+                global_step=self.epoch,
+            )
+            self.writer.add_figure(
+                "BBox HeatMap Width Visualisation",
+                plot_heatmaps(
+                    predicted_heatmap=output_bbox[:, 0, :, :].cpu().detach().numpy(),
+                    groundtruth_heatmap=batch["bbox_heatmap"][:, 0, :, :]
+                    .cpu()
+                    .detach()
+                    .numpy(),
+                ),
+                global_step=self.epoch,
+            )
 
-            self.writer.add_figure('BBox HeatMap Height Visualisation',
-                                   plot_heatmaps(
-                                       predicted_heatmap=output_bbox[:, 1, :, :].cpu().detach().numpy(),
-                                       groundtruth_heatmap=batch[
-                                                               "bbox_heatmap"][:, 1, :,
-                                                           :].cpu().detach().numpy()),
-                                   global_step=self.epoch )
+            self.writer.add_figure(
+                "BBox HeatMap Height Visualisation",
+                plot_heatmaps(
+                    predicted_heatmap=output_bbox[:, 1, :, :].cpu().detach().numpy(),
+                    groundtruth_heatmap=batch["bbox_heatmap"][:, 1, :, :]
+                    .cpu()
+                    .detach()
+                    .numpy(),
+                ),
+                global_step=self.epoch,
+            )
 
-            file_save_string = 'train epoch {} -|- global_step {} '.format(self.epoch, self.epoch * len(
-                self.train_dataloader) + i)
-            file_save_string += 'loss {:.7f} -|- heatmap_loss {:.7f} -|- bbox_loss {:.7f} -|- embedding_loss {:.7f}\n'.format(
+            file_save_string = "train epoch {} -|- global_step {} ".format(
+                self.epoch, self.epoch * len(self.train_dataloader) + i
+            )
+            file_save_string += "loss {:.7f} -|- heatmap_loss {:.7f} -|- bbox_loss {:.7f} -|- embedding_loss {:.7f}\n".format(
                 running_loss,
                 running_heatmap_loss,
                 running_bbox_loss,
-                running_embedding_loss)
+                running_embedding_loss,
+            )
 
             self.f.write(file_save_string)
-            plt.close('all')
+            plt.close("all")
 
             # self.save_model_checkpoint()
             if (self.epoch % self.cfg["trainer"]["val_save_interval"] == 0) or (
-                    self.epoch == self.cfg["trainer"]["num_epochs"] - 1):
+                self.epoch == self.cfg["trainer"]["num_epochs"] - 1
+            ):
                 self.save_model_checkpoint()
                 self.val()
 
@@ -343,7 +440,7 @@ class SMPTrainer():
         running_test_bbox_loss = 0.0
         running_test_embedding_loss = 0.0
         running_test_loss = 0.0
-        self.cfg["evaluation"]["topk_k"]=self.cfg["evaluation"]["test_topk_k"]
+        self.cfg["evaluation"]["topk_k"] = self.cfg["evaluation"]["test_topk_k"]
         self.load_checkpoint(key="test_checkpoint")
         self.optimizer.zero_grad()
         with torch.no_grad():
@@ -356,38 +453,70 @@ class SMPTrainer():
                         if key != "image_path":
                             batch[key] = batch[key].to(self.device)
 
-                    output_heatmap, output_bbox, detections, model_encodings, heatmap_loss, bbox_loss, embedding_loss = self.get_model_output_and_loss(
-                        batch, split=2,inference_only=1)
-                    groundtruth_list.append(batch['heatmap_sized_bounding_box_list'].cpu())
+                    (
+                        output_heatmap,
+                        output_bbox,
+                        detections,
+                        model_encodings,
+                        heatmap_loss,
+                        bbox_loss,
+                        embedding_loss,
+                    ) = self.get_model_output_and_loss(batch, split=2, inference_only=1)
+                    groundtruth_list.append(
+                        batch["heatmap_sized_bounding_box_list"].cpu()
+                    )
 
-                    if (self.cfg["test_debug"]):
+                    if self.cfg["test_debug"]:
                         for i in range(output_heatmap.shape[0]):
-                            heatmap_sized_bounding_box_np = batch['heatmap_sized_bounding_box_list'][
-                                i].detach().cpu().numpy()
-                            print("\nGround Truths", i,
-                                  heatmap_sized_bounding_box_np[1] + (heatmap_sized_bounding_box_np[3]) / 2,
-                                  heatmap_sized_bounding_box_np[2] + (heatmap_sized_bounding_box_np[4]) / 2)
+                            heatmap_sized_bounding_box_np = (
+                                batch["heatmap_sized_bounding_box_list"][i]
+                                .detach()
+                                .cpu()
+                                .numpy()
+                            )
+                            print(
+                                "\nGround Truths",
+                                i,
+                                heatmap_sized_bounding_box_np[1]
+                                + (heatmap_sized_bounding_box_np[3]) / 2,
+                                heatmap_sized_bounding_box_np[2]
+                                + (heatmap_sized_bounding_box_np[4]) / 2,
+                            )
 
-                            groundtruth_center_np = batch["center_heatmap"][i].detach().cpu().numpy()
+                            groundtruth_center_np = (
+                                batch["center_heatmap"][i].detach().cpu().numpy()
+                            )
                             plt.imshow(groundtruth_center_np)  # cmap="Greys")
                             plt.title(str(i) + "_GT Center")
                             plt.show()
-                            plt.imsave(os.path.join(self.checkpoint_dir,str(batch["image_id"][i].cpu().numpy())+"_groundtruth_center_np.png"),groundtruth_center_np)
+                            plt.imsave(
+                                os.path.join(
+                                    self.checkpoint_dir,
+                                    str(batch["image_id"][i].cpu().numpy())
+                                    + "_groundtruth_center_np.png",
+                                ),
+                                groundtruth_center_np,
+                            )
 
                             heatmap_np = output_heatmap[i].detach().cpu().numpy()
                             plt.imshow(heatmap_np)  # cmap="Greys")
                             plt.title(str(i) + "_Predicted Heatmap")
                             plt.show()
-                            plt.imsave(os.path.join(self.checkpoint_dir,
-                                                    str(batch["image_id"][i].cpu().numpy()) + "_heatmap_np.png"),
-                                       heatmap_np)
+                            plt.imsave(
+                                os.path.join(
+                                    self.checkpoint_dir,
+                                    str(batch["image_id"][i].cpu().numpy())
+                                    + "_heatmap_np.png",
+                                ),
+                                heatmap_np,
+                            )
 
                             center = np.argmax(heatmap_np)
-                            print("Predictions", i, center,
-                                  center % 320,
-                                  center / 320)
+                            print("Predictions", i, center, center % 320, center / 320)
 
-                            groundtruth_bbox_np = batch["bbox_heatmap"][i].detach().cpu().numpy()
+                            groundtruth_bbox_np = (
+                                batch["bbox_heatmap"][i].detach().cpu().numpy()
+                            )
                             groundtruth_bbox_np_w = groundtruth_bbox_np[0, :, :]
                             plt.imshow(groundtruth_bbox_np_w)  # cmap="Greys")
                             plt.title(str(i) + "_GT Width")
@@ -417,44 +546,49 @@ class SMPTrainer():
 
                             # print("Breakpoint")
 
-                    if (self.cfg["test_parameters"]["save_test_outputs"]):
-                        save_test_outputs(self.checkpoint_dir, batch, output_heatmap.cpu().detach().numpy(),
-                                          output_bbox.cpu().detach().numpy())
+                    if self.cfg["test_parameters"]["save_test_outputs"]:
+                        save_test_outputs(
+                            self.checkpoint_dir,
+                            batch,
+                            output_heatmap.cpu().detach().numpy(),
+                            output_bbox.cpu().detach().numpy(),
+                        )
                     detections_list.append(detections.cpu())
                     embeddings_list.append(model_encodings.cpu())
 
-
-
-                file_save_string = 'test epoch {} -|- global_step {} '.format(self.epoch,
-                                                                              self.epoch * len(
-                                                                                  self.test_dataloader) + i)
-                file_save_string += 'loss {:.7f} -|- heatmap_loss {:.7f} -|- bbox_loss {:.7f} -|- embedding_loss {:.7f} \n'.format(
+                file_save_string = "test epoch {} -|- global_step {} ".format(
+                    self.epoch, self.epoch * len(self.test_dataloader) + i
+                )
+                file_save_string += "loss {:.7f} -|- heatmap_loss {:.7f} -|- bbox_loss {:.7f} -|- embedding_loss {:.7f} \n".format(
                     running_test_loss,
                     running_test_heatmap_loss,
                     running_test_bbox_loss,
-                    running_test_embedding_loss)
+                    running_test_embedding_loss,
+                )
                 # 'test loss-{:.7f}.pth'.format(self.epoch, self.running_loss)
                 self.f.write(file_save_string)
-        prediction_save_path = self.save_predictions(detections_list, embeddings_list, groundtruth_list)
+        prediction_save_path = self.save_predictions(
+            detections_list, embeddings_list, groundtruth_list
+        )
         return prediction_save_path
 
     def save_predictions(self, detections_list, embeddings_list, groundtruth_list):
-        detections = torch.cat(detections_list,
-                               dim=0)
-        embeddings = torch.cat(embeddings_list,
-                               dim=0)
+        detections = torch.cat(detections_list, dim=0)
+        embeddings = torch.cat(embeddings_list, dim=0)
         detections = torch.hstack((detections, embeddings))
         detections = detections.cpu().numpy()
-        prediction_save_path = os.path.join(self.checkpoint_dir,
-                                            "bbox_predictions.npy")
+        prediction_save_path = os.path.join(self.checkpoint_dir, "bbox_predictions.npy")
         np.save(prediction_save_path, detections)
         # header = ["image_id", "bbox_x", "bbox_y", "w", "h", "score", "class_label", "embeddings"]
-        pd.DataFrame(detections).to_csv(os.path.join(self.checkpoint_dir, "bbox_predictions.csv"))
+        pd.DataFrame(detections).to_csv(
+            os.path.join(self.checkpoint_dir, "bbox_predictions.csv")
+        )
 
         print("Predictions are Saved at", prediction_save_path)
-        groundtruth = torch.cat(groundtruth_list,
-                                dim=0)
+        groundtruth = torch.cat(groundtruth_list, dim=0)
         # groundtruth[:, 1] = groundtruth[:, 1] + groundtruth[:, 3] / 2
         # groundtruth[:, 2] = groundtruth[:, 2] + groundtruth[:, 4] / 2
-        pd.DataFrame(groundtruth).to_csv(os.path.join(self.checkpoint_dir, "gt_predictions.csv"))
+        pd.DataFrame(groundtruth).to_csv(
+            os.path.join(self.checkpoint_dir, "gt_predictions.csv")
+        )
         return prediction_save_path

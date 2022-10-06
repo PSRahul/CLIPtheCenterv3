@@ -26,8 +26,8 @@ data:
   val_data_root: "/home/psrahul/MasterThesis/datasets/PASCAL_15_5_1500/base_classes/val/coco/"
   test_data_root: "/home/psrahul/MasterThesis/datasets/PASCAL_15_5_1500/base_classes/train/coco/"
   train_aug: False
-  train_batch_size: 64 #10
-  val_batch_size: 64 #10
+  train_batch_size: 4 #10
+  val_batch_size: 4 #10
   test_batch_size: 3     #10
   input_dimension: 320 # EfficientNetB2
   #   input_dimension: 384  ResNet18
@@ -38,8 +38,8 @@ heatmap:
   fix_radius_value: 5
 max_objects_per_image: 5
 smp:
-  model: "DeepLabV3Plus" #Unet" #"Unet" #DeepLabV3Plus"
-  encoder_name: "mobilenet_v2" #"resnet50" #"mobilenet_v2
+  model: "Unet" #Unet" #"Unet" #DeepLabV3Plus"
+  encoder_name: "resnet50" #"resnet50" #"mobilenet_v2
   encoder_weights: "imagenet" #"imagenet" #"swsl" #imagenet"
   decoder_output_classes: 16 #256 #16
   decoder_output_dimension: 320
@@ -50,26 +50,10 @@ model:
     encoder_name: EfficientNetB2Model #EfficientNetB2Model #EfficientNetB3Model #ResNet18Model #EfficientNetB3Model
     use_pretrained: True
     freeze_params: False
-  decoder:
-    #input_num_filter: 1792 # EfficientNetB0
-    #input_num_filter: 1280 # EfficientNetB1
-    #input_num_filter: 1408 # EfficientNetB2
-    #input_num_filter: 1536 # EfficientNetB3
-    #input_num_filter: 1792 # EfficientNetB4
-    #input_num_filter: 2048 # ResNet50
-    input_num_filter: 512 #ResNet18
-    num_layers: 3
-    output_num_filter: [ 512,128,1 ] # EfficientNetB2
-    #    output_num_filter: [ 256,256,256 ] ResNet18
   heatmap_head:
     input_num_filter: 128 # EfficientNetB2
     # input_num_filter: 256 ResNet18
     output_num_filter: [ 64,1 ]
-    kernel_size: [ 3,1 ]
-  offset_head:
-    input_num_filter: 128 # EfficientNetB2
-    # input_num_filter: 256 ResNet18
-    output_num_filter: [ 64,2 ]
     kernel_size: [ 3,1 ]
   bbox_head:
     input_num_filter: 128 # EfficientNetB2
@@ -82,7 +66,7 @@ model:
     offset_head: 0
     embedding_head: 1
 logging:
-  root_dir: "/home/psrahul/MasterThesis/repo/Phase5/Outputs/"
+  root_dir: "/home/psrahul/MasterThesis/repo/Phase6/Outputs/"
   checkpoint_dir: "PASCAL_15_5_1500/Training"
   display_log_fraction: 1
 evaluation:

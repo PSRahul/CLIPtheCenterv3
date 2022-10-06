@@ -6,17 +6,17 @@ from network.heads.heatmap_head import SMP_HeatMapHead
 from network.heads.roi_head import SMP_RoIHead
 from network.heads.embedder import SMP_Embedder
 from network.roi_classifier.clip_model import CLIPModel
-from network.roi_classifier.utils import get_masked_heatmaps, get_binary_masks, make_detections_valid
+from network.roi_classifier.utils import (
+    get_masked_heatmaps,
+    get_binary_masks,
+    make_detections_valid,
+)
 from network.models.SMP_DeepLab.utils import get_bounding_box_prediction
 from network.model_utils import weights_init, set_parameter_requires_grad
 import sys
 from torch.nn import Identity
 import segmentation_models_pytorch as smp
 from segmentation_models_pytorch import DeepLabV3Plus, Unet
-from network.decoder.decoder_model import DecoderConvTModel
-from network.encoder.resnet18 import ResNet18Model
-
-from network.encoder.resnet50 import ResNet50Model
 
 
 class SMPModel(nn.Module):
@@ -27,10 +27,10 @@ class SMPModel(nn.Module):
             encoder_name=cfg["smp"]["encoder_name"],
             encoder_weights=cfg["smp"]["encoder_weights"],
             in_channels=3,
-            classes=int(cfg["smp"]["decoder_output_classes"])
+            classes=int(cfg["smp"]["decoder_output_classes"]),
         )
         # self.encoder_decoder_model.segmentation_head = nn.Identity()
-        #encoder_model_name = globals()[cfg["model"]["encoder"]["encoder_name"]]
+        # encoder_model_name = globals()[cfg["model"]["encoder"]["encoder_name"]]
         # self.encoder_model = encoder_model_name(cfg)
         # self.decoder_model = DecoderConvTModel(cfg)
 
@@ -48,7 +48,9 @@ class SMPModel(nn.Module):
         self.model_init()
 
     def freeze_params(self):
-        set_parameter_requires_grad(model=self.encoder_decoder_model.encoder, freeze_params=True)
+        set_parameter_requires_grad(
+            model=self.encoder_decoder_model.encoder, freeze_params=True
+        )
 
     def model_init(self):
         # self.encoder_decoder_model.decoder(weights_init)
@@ -61,11 +63,11 @@ class SMPModel(nn.Module):
         self.roi_head.model.apply(weights_init)
         self.embedder.model.apply(weights_init)
 
-    def forward(self, batch, epoch,split=0):
+    def forward(self, batch, epoch, split=0):
         image = batch["image"].to(self.cfg["device"])
         image_path = batch["image_path"]
-        image_id = batch['image_id'].to(self.cfg["device"])
-        flattened_index = batch['flattened_index']
+        image_id = batch["image_id"].to(self.cfg["device"])
+        flattened_index = batch["flattened_index"]
 
         x = self.encoder_decoder_model(image)
         # x = self.decoder_model(self.encoder_model(image))
@@ -75,28 +77,37 @@ class SMPModel(nn.Module):
         # output_bbox = output_bbox_unscaled * self.cfg["heatmap"]["output_dimension"]
         output_roi = self.roi_head(x)
         with torch.no_grad():
-            detections = get_bounding_box_prediction(self.cfg,
-                                                     output_heatmap.detach(),
-                                                     output_bbox.detach(),
-                                                     image_id)
+            detections = get_bounding_box_prediction(
+                self.cfg, output_heatmap.detach(), output_bbox.detach(), image_id
+            )
 
-
-        if (epoch > self.cfg["trainer"]["embedding_loss_start_epoch"]):
+        if epoch > self.cfg["trainer"]["embedding_loss_start_epoch"]:
             detections_adjusted = make_detections_valid(self.cfg, detections)
             with torch.no_grad():
-                clip_encoding = self.clip_model(image_path, detections_adjusted, split=split)
+                clip_encoding = self.clip_model(
+                    image_path, detections_adjusted, split=split
+                )
                 # clip_encoding = torch.zeros((image.shape[0], 512))
                 output_mask = get_binary_masks(self.cfg, detections_adjusted)
 
-            masked_roi_heatmap = get_masked_heatmaps(self.cfg, output_roi, output_mask.cuda(),
-                                                     split=split)
+            masked_roi_heatmap = get_masked_heatmaps(
+                self.cfg, output_roi, output_mask.cuda(), split=split
+            )
             model_encodings = self.embedder(masked_roi_heatmap)
-            model_encodings_normalised = model_encodings / model_encodings.norm(dim=-1, keepdim=True)
+            model_encodings_normalised = model_encodings / model_encodings.norm(
+                dim=-1, keepdim=True
+            )
         else:
-            clip_encoding=torch.ones((1,1))
-            model_encodings_normalised=torch.ones((1,1))
-            detections_adjusted=detections
-        return output_heatmap, output_bbox, detections_adjusted, clip_encoding, model_encodings_normalised
+            clip_encoding = torch.ones((1, 1))
+            model_encodings_normalised = torch.ones((1, 1))
+            detections_adjusted = detections
+        return (
+            output_heatmap,
+            output_bbox,
+            detections_adjusted,
+            clip_encoding,
+            model_encodings_normalised,
+        )
 
     def forward_summary(self, image):
         x = self.encoder_decoder_model(image)
