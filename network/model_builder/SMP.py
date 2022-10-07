@@ -13,10 +13,6 @@ import sys
 from torch.nn import Identity
 import segmentation_models_pytorch as smp
 from segmentation_models_pytorch import DeepLabV3Plus, Unet
-from network.decoder.decoder_model import DecoderConvTModel
-from network.encoder.resnet18 import ResNet18Model
-
-from network.encoder.resnet50 import ResNet50Model
 
 
 class SMPModel(nn.Module):
@@ -30,14 +26,9 @@ class SMPModel(nn.Module):
             classes=int(cfg["smp"]["decoder_output_classes"])
         )
         # self.encoder_decoder_model.segmentation_head = nn.Identity()
-        encoder_model_name = globals()[cfg["model"]["encoder"]["encoder_name"]]
-        # self.encoder_model = encoder_model_name(cfg)
-        # self.decoder_model = DecoderConvTModel(cfg)
 
         self.heatmap_head = SMP_HeatMapHead(cfg)
-        # self.heatmap_head = nn.ReLU()
         self.bbox_head = SMP_BBoxHead(cfg)
-        # self.bbox_head = nn.ReLU()
         self.roi_head = SMP_RoIHead(cfg)
         self.clip_model = CLIPModel(cfg)
         self.embedder = SMP_Embedder(cfg)
