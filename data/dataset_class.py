@@ -114,8 +114,8 @@ class CocoDetection(VisionDataset):
         bbox_heatmap = np.zeros((2, self.cfg["heatmap"]["output_dimension"],
                                  self.cfg["heatmap"]["output_dimension"]))
 
-        bbox = np.zeros((self.cfg["max_objects_per_image"], 2))
-        flattened_index = np.zeros(self.cfg["max_objects_per_image"])
+        bbox = np.zeros((self.cfg["evaluation"]["topk_k"], 2))
+        flattened_index = np.zeros(self.cfg["evaluation"]["topk_k"])
         num_objects = 0
         for heatmap_sized_bounding_box in heatmap_sized_bounding_box_list:
             center_heatmap_i, bbox_heatmap_i, bbox_center = create_heatmap_object(self.cfg, heatmap_sized_bounding_box)
@@ -125,7 +125,7 @@ class CocoDetection(VisionDataset):
             flattened_index[num_objects] = self.cfg["heatmap"]["output_dimension"] * bbox_center[1] + \
                                            bbox_center[0]
             num_objects += 1
-            if (num_objects == self.cfg["max_objects_per_image"]):
+            if (num_objects == self.cfg["evaluation"]["topk_k"]):
                 break
 
         center_heatmap = center_heatmap.astype(np.int)
