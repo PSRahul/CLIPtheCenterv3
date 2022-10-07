@@ -385,7 +385,7 @@ class SMPTrainer():
                             plt.imshow(bbox_np_h)
                             plt.title(str(i) + "_Predicted Height")  # cmap="Greys")
                             plt.show()
-
+                            detections_np=detections.detach().cpu().numpy()
                             plt.close("all")
                             # batch['heatmap_sized_bounding_box_list'][i, 1] += (batch[
                             #    'heatmap_sized_bounding_box_list'][i, 3]) / 2

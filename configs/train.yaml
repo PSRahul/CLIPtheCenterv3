@@ -1,18 +1,18 @@
 version: 0
 
-train: True
+train: False
 test: True
 dataset_class_debug: False
 debug: False
-test_debug: False
+test_debug: True
 device: "cuda"
 test_parameters:
   save_test_outputs: False
-  
+
 trainer:
   num_epochs: 600
-  resume_training: False
-  checkpoint_path: "/home/psrahul/MasterThesis/repo/Phase5/Outputs/PASCAL_3_2_10/Unetresnet50/28092022_1031/epoch-599-loss-7.8278679.pth"
+  resume_training: True
+  checkpoint_path: "/home/psrahul/MasterThesis/repo/Phase6/Outputs/PASCAL_3_2_10/Unetresnet50/07102022_1245/epoch-250-loss-57.3799216.pth"
   val_save_interval: 50
   bbox_heatmap_loss: False
   bbox_scatter_loss: True
@@ -51,7 +51,7 @@ model:
     embedding_head: 1
 
 logging:
-  root_dir: "/home/psrahul/MasterThesis/repo/Phase5/Outputs/"
+  root_dir: "/home/psrahul/MasterThesis/repo/Phase6/Outputs/"
   checkpoint_dir: "PASCAL_3_2_10"
   display_log_fraction: 1
 evaluation:
