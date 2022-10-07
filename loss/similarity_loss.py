@@ -8,9 +8,7 @@ def calculate_embedding_loss(predicted_embedding, groundtruth_embedding,flattene
     for i in range(object_boolean_mask.shape[0]):
         object_boolean_mask[i, 0:int(num_objects[i])] = 1
     object_boolean_mask=object_boolean_mask.view((object_boolean_mask.shape[0]*object_boolean_mask.shape[1]))
-    #predicted_embedding = predicted_embedding.view((flattened_index.shape[0], flattened_index.shape[1], 512))
-    #groundtruth_embedding = groundtruth_embedding.view((flattened_index.shape[0], flattened_index.shape[1], 512))
-
+    
     object_boolean_mask = object_boolean_mask.unsqueeze(1).expand_as(predicted_embedding.float())
     predicted_embedding, groundtruth_embedding = predicted_embedding * object_boolean_mask, groundtruth_embedding * object_boolean_mask
 
