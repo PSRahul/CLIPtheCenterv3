@@ -1,0 +1,6 @@
+1. 836dcd8e
+    Change Gaussian Radius to 1
+2. 74f57f03
+    Add groundtruth center and bbox
+3. 74d646ee
+    Add heatmap with kernel 9

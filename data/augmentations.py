@@ -10,10 +10,11 @@ class GetAugementations():
 
     def get_efficientnet_transforms(self):
         train_transform = A.Compose([
-            A.Resize(self.cfg["data"]["input_dimension"], self.cfg["data"]["input_dimension"],
-                     interpolation=cv2.INTER_CUBIC),
-            # A.HorizontalFlip(p=0.5),
-            # A.RandomBrightnessContrast(p=0.2),
+            A.RandomSizedBBoxSafeCrop(self.cfg["data"]["input_dimension"], self.cfg["data"]["input_dimension"],
+                     interpolation=cv2.INTER_CUBIC,p=1),
+            A.HorizontalFlip(p=0.5),
+            A.VerticalFlip(p=0.5),
+            A.RandomBrightnessContrast(p=0.2),
         ], bbox_params=A.BboxParams
         (format='coco',  label_fields=['class_labels']))
 

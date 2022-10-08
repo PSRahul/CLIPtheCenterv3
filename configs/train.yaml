@@ -10,20 +10,20 @@ test_parameters:
   save_test_outputs: False
 
 trainer:
-  num_epochs: 600
+  num_epochs: 1000
   resume_training: True
-  checkpoint_path: "/home/psrahul/MasterThesis/repo/Phase6/Outputs/PASCAL_3_2_10/Unetresnet50/07102022_1245/epoch-250-loss-57.3799216.pth"
+  checkpoint_path: "/home/psrahul/MasterThesis/repo/Phase6/Outputs/PASCAL_3_2_10/Unetresnet50/07102022_1646/epoch-999-loss-5.0477887.pth"
   val_save_interval: 50
   bbox_heatmap_loss: False
   bbox_scatter_loss: True
-  embedding_loss_start_epoch: -1
+  embedding_loss_start_epoch: 300
   bbox_loss_start_epoch: -1
 
 data:
   train_data_root: "/home/psrahul/MasterThesis/datasets/PASCAL_3_2_10/base_classes/train/coco/"
   val_data_root: "/home/psrahul/MasterThesis/datasets/PASCAL_3_2_10/base_classes/val/coco/"
   test_data_root: "/home/psrahul/MasterThesis/datasets/PASCAL_3_2_10/base_classes/train/coco/"
-  train_aug: False
+  train_aug: True
   train_batch_size: 5
   val_batch_size: 5
   test_batch_size: 1
@@ -33,7 +33,7 @@ heatmap:
   output_dimension: 320
   radius_scaling: 16
   fix_radius: True
-  fix_radius_value: 5
+  fix_radius_value: 1
 
 smp:
   model: "Unet" #Unet" #"Unet" #DeepLabV3Plus"
@@ -55,6 +55,6 @@ logging:
   checkpoint_dir: "PASCAL_3_2_10"
   display_log_fraction: 1
 evaluation:
-  heatmap_pooling_kernel: 3
+  heatmap_pooling_kernel: 9
   topk_k: 5
-  test_topk_k: 256
+  test_topk_k: 5

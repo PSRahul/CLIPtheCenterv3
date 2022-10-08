@@ -111,22 +111,24 @@ def main(cfg):
     else:
         gt = get_groundtruths(dataset)
         prediction = np.load(cfg["prediction_path"])
+        prediction=prediction[prediction[:,5]>cfg["post_processing"]["score_threshold"]]
+        print("Resizing Predictions")
+        prediction = resize_predictions_image_size(cfg, dataset, copy.deepcopy(prediction))
+
         if cfg["perform_nms"]:
             prediction_with_nms = perform_nms(cfg, prediction)
         else:
             prediction_with_nms = prediction
-        print("Resizing Predictions")
-        prediction_with_nms_resized = resize_predictions_image_size(cfg, dataset, copy.deepcopy(prediction_with_nms))
         print("Metric Data saved at ", os.path.join(checkpoint_dir, "data.npz"))
         np.savez(os.path.join(checkpoint_dir, "data.npz"), gt=gt, prediction=prediction,
                  prediction_with_nms=prediction_with_nms,
-                 prediction_with_nms_resized=prediction_with_nms_resized)
+                 prediction_with_nms_resized=prediction_with_nms)
 
     print("GroundTruth Shape", gt.shape)
     print("Prediction Shape", prediction.shape)
     print("Prediction with NMS Shape", prediction_with_nms.shape)
 
-    prediction_with_nms_resized = assign_classes(clip_embedding, prediction_with_nms_resized)
+    prediction_with_nms_resized = assign_classes(clip_embedding, prediction_with_nms)
     # calculate_torchmetrics_mAP(gt, prediction_with_nms_resized)
     print("-------------------------------------")
     print("WITHOUT CATEGORY LABELS")

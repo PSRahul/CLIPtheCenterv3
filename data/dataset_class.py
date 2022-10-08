@@ -115,13 +115,17 @@ class CocoDetection(VisionDataset):
                                  self.cfg["heatmap"]["output_dimension"]))
 
         bbox = np.zeros((self.cfg["evaluation"]["topk_k"], 2))
+        gt_objects = np.zeros((self.cfg["evaluation"]["topk_k"], 4))
         flattened_index = np.zeros(self.cfg["evaluation"]["topk_k"])
         num_objects = 0
+
         for heatmap_sized_bounding_box in heatmap_sized_bounding_box_list:
             center_heatmap_i, bbox_heatmap_i, bbox_center = create_heatmap_object(self.cfg, heatmap_sized_bounding_box)
             np.maximum(center_heatmap, center_heatmap_i, out=center_heatmap)
             np.maximum(bbox_heatmap, bbox_heatmap_i, out=bbox_heatmap)
             bbox[num_objects] = int(heatmap_sized_bounding_box[2]), int(heatmap_sized_bounding_box[3])
+            gt_objects[num_objects,0:2]=bbox_center
+            gt_objects[num_objects, 2:4] = int(heatmap_sized_bounding_box[2]), int(heatmap_sized_bounding_box[3])
             flattened_index[num_objects] = self.cfg["heatmap"]["output_dimension"] * bbox_center[1] + \
                                            bbox_center[0]
             num_objects += 1
@@ -154,6 +158,7 @@ class CocoDetection(VisionDataset):
         batch_item['center_heatmap'] = torch.from_numpy(center_heatmap)
         batch_item['bbox_heatmap'] = torch.from_numpy(bbox_heatmap)
         batch_item['bbox'] = torch.from_numpy(bbox)
+        batch_item['gt_object'] = torch.from_numpy(gt_objects)
         batch_item['flattened_index'] = torch.from_numpy(flattened_index)
         batch_item['num_objects'] = torch.tensor(num_objects)
         if (self.cfg["debug"]):

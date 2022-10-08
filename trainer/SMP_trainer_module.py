@@ -96,11 +96,17 @@ class SMPTrainer():
                                                                  flattened_index=batch['flattened_index'],
                                                                  num_objects=batch['num_objects'],
                                                                  device=self.device)
-
-            embedding_loss = calculate_embedding_loss(predicted_embedding=model_encodings.to(device=self.device),
+            if (self.epoch > self.cfg["trainer"]["embedding_loss_start_epoch"]):
+                embedding_loss = calculate_embedding_loss(predicted_embedding=model_encodings.to(device=self.device),
                                                       groundtruth_embedding=clip_encoding.to(device=self.device),
                                                       flattened_index=batch['flattened_index'],
                                                       num_objects=batch['num_objects'])
+
+            else:
+                embedding_loss = calculate_embedding_loss(predicted_embedding=torch.ones(batch['bbox'].shape[0]*batch['bbox'].shape[1],1).to(device=self.device),
+                                                          groundtruth_embedding=torch.ones(batch['bbox'].shape[0]*batch['bbox'].shape[1],1).to(device=self.device),
+                                                          flattened_index=batch['flattened_index'],
+                                                          num_objects=batch['num_objects'])
 
         else:
             heatmap_loss, bbox_loss, embedding_loss=0,0,0
@@ -149,10 +155,10 @@ class SMPTrainer():
                                        val_bbox_loss=running_val_bbox_loss ,
                                        val_embedding_loss=running_val_embedding_loss )
 
-            running_val_heatmap_loss /= len(self.val_dataloader)
-            running_val_bbox_loss /= len(self.val_dataloader)
-            running_val_embedding_loss /= len(self.val_dataloader)
-            running_val_loss /= len(self.val_dataloader)
+            running_val_heatmap_loss /= len(self.val_dataloader.dataset)
+            running_val_bbox_loss /= len(self.val_dataloader.dataset)
+            running_val_embedding_loss /= len(self.val_dataloader.dataset)
+            running_val_loss /= len(self.val_dataloader.dataset)
 
             self.running_val_loss = running_val_loss
             self.writer.add_scalar('val loss',
@@ -250,10 +256,10 @@ class SMPTrainer():
 
                                        embedding_loss=running_embedding_loss)
 
-            running_heatmap_loss /= len(self.train_dataloader)
-            running_bbox_loss /= len(self.train_dataloader)
-            running_embedding_loss /= len(self.train_dataloader)
-            running_loss /= len(self.train_dataloader)
+            running_heatmap_loss /= len(self.train_dataloader.dataset)
+            running_bbox_loss /= len(self.train_dataloader.dataset)
+            running_embedding_loss /= len(self.train_dataloader.dataset)
+            running_loss /= len(self.train_dataloader.dataset)
 
             # ...log the running loss
 
@@ -363,7 +369,9 @@ class SMPTrainer():
                             print("Predictions", i, center,
                                   center % 320,
                                   center / 320)
-
+                            detections_np=detections.detach().cpu().numpy()
+                            detections_np[:,1]+=detections_np[:,3]/2
+                            detections_np[:, 2] += detections_np[:, 4] / 2
                             groundtruth_bbox_np = batch["bbox_heatmap"][i].detach().cpu().numpy()
                             groundtruth_bbox_np_w = groundtruth_bbox_np[0, :, :]
                             plt.imshow(groundtruth_bbox_np_w)  # cmap="Greys")
@@ -385,8 +393,11 @@ class SMPTrainer():
                             plt.imshow(bbox_np_h)
                             plt.title(str(i) + "_Predicted Height")  # cmap="Greys")
                             plt.show()
-                            detections_np=detections.detach().cpu().numpy()
+                            gt_object_np = batch["gt_object"][i].detach().cpu().int().numpy()
                             plt.close("all")
+
+                            print("Predictions",detections_np)
+                            print("Ground Truth",gt_object_np)
                             # batch['heatmap_sized_bounding_box_list'][i, 1] += (batch[
                             #    'heatmap_sized_bounding_box_list'][i, 3]) / 2
                             # batch['heatmap_sized_bounding_box_list'][i, 2] += (batch[

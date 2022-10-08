@@ -26,7 +26,7 @@ def perform_nms(cfg, prediction):
         # columns = [["image_id", "bbox_x", "bbox_y", "w", "h", "score", "class_label"]]
         # Filter based on the scores
         scores_filtered = scores[nms_ind]
-        filter_by_nms_and_score_ind = scores_filtered > cfg["post_processing"]["score_threshold"]
+        filter_by_nms_and_score_ind = scores_filtered > 0.0
         filter_by_nms_and_score_ind = filter_by_nms_and_score_ind.numpy()
         if (len(filter_by_nms_and_score_ind) != 0):
             nms_score_ind = nms_ind[filter_by_nms_and_score_ind]
