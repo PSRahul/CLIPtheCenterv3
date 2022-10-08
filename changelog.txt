@@ -4,3 +4,5 @@
     Add groundtruth center and bbox
 3. 74d646ee
     Add heatmap with kernel 9
+4. 146dcca3
+    Increase the WH and Heatmap head
