@@ -1,6 +1,6 @@
 version: 0
 
-train: False
+train: True
 test: True
 dataset_class_debug: False
 debug: False
@@ -11,7 +11,7 @@ test_parameters:
 
 trainer:
   num_epochs: 1000
-  resume_training: True
+  resume_training: False
   checkpoint_path: "/home/psrahul/MasterThesis/repo/Phase6/Outputs/PASCAL_3_2_10/Unetresnet50/07102022_1646/epoch-999-loss-5.0477887.pth"
   val_save_interval: 50
   bbox_heatmap_loss: False
@@ -36,7 +36,7 @@ heatmap:
   fix_radius_value: 1
 
 smp:
-  model: "Unet" #Unet" #"Unet" #DeepLabV3Plus"
+  model: "DeepLabV3Plus" #Unet" #"Unet" #DeepLabV3Plus"
   encoder_name: "resnet50" #"resnet50" #mobilenet_v2"
   encoder_weights: "imagenet" #"imagenet" #"swsl" #imagenet"
   decoder_output_classes: 3 #256 #16
