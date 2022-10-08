@@ -20,7 +20,7 @@ class SMP_HeatMapHead(nn.Module):
 
             ))
         layers.append(nn.ReLU(inplace=True))
-        """
+
         layers.append(nn.BatchNorm2d(8))
         layers.append(
             nn.Conv2d(
@@ -41,7 +41,7 @@ class SMP_HeatMapHead(nn.Module):
 
             ))
         layers.append(nn.ReLU(inplace=True))
-        """
+
         self.model = nn.Sequential(*layers)
 
     def forward(self, x):
