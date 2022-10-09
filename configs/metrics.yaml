@@ -11,4 +11,4 @@ post_processing:
   model_output_shape: 320
 logging:
   root_dir: "/home/psrahul/MasterThesis/repo/Phase6/Outputs/"
-  checkpoint_dir: "PASCAL_3_2_10/metrics/"
+  checkpoint_dir: "PASCAL_3_2_10_SA/metrics/"
