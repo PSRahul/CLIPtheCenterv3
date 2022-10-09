@@ -19,3 +19,12 @@ Training 83200a28
  Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.392
 
 3. Add augmentations
+Augmentation do not work
+
+4.PASCAL_3_2_10_SA Training
+
+/home/psrahul/MasterThesis/repo/Phase6/Outputs/09102022_1233/
+/home/psrahul/MasterThesis/repo/Phase6/Outputs/PASCAL_3_2_10_SA/metrics/09102022_2254
+Test Set PASCAL_15_5_SA train
+Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.073
+Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.001
