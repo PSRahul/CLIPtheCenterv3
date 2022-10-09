@@ -22,7 +22,7 @@ data:
   train_data_root: "/home/psrahul/MasterThesis/datasets/PASCAL_15_5_SA/base_classes/train/coco/"
   val_data_root: "/home/psrahul/MasterThesis/datasets/PASCAL_15_5_SA/base_classes/val/coco/"
   test_data_root: "/home/psrahul/MasterThesis/datasets/PASCAL_15_5_SA/base_classes/train/coco/"
-  train_aug: True
+  train_aug: False
   train_batch_size: 5
   val_batch_size: 5
   test_batch_size: 1
