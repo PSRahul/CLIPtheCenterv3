@@ -1,0 +1,9 @@
+1.5939c833
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.889
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.344
+
+ Make BBOx only at the object center
+ Make Center Gaussian with only one object at one
+ Increase the layer from 1 to 3 in BBox and Heatmap head
+
+2.
