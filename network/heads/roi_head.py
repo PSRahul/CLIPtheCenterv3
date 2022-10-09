@@ -3,7 +3,6 @@ import torch
 from torchinfo import summary
 from network.models.EfficientnetConv2DT.utils import get_bounding_box_prediction
 import clip
-from torchvision.models import ResNet18_Weights
 
 
 class EfficientnetConv2DT_RoIHead(nn.Module):
@@ -91,71 +90,6 @@ class SMP_RoIHead(nn.Module):
 
     def forward(self, x):
         return self.model.forward(x)
-
-    def print_details(self):
-        batch_size = 32
-        summary(self.model, input_size=(batch_size, 256, 96, 96))
-
-class ResNet_RoIHead(nn.Module):
-    def __init__(self, cfg):
-        super().__init__()
-        layers = []
-
-        super().__init__()
-        self.model = torch.hub.load(
-            "pytorch/vision:v0.10.0",
-            "resnet18", weights=ResNet18_Weights.DEFAULT
-        )
-        self.model = nn.Sequential(*list(self.model.children())[:-2])
-
-        layers = []
-
-        layers.append(
-            nn.ConvTranspose2d(
-                in_channels=512,
-                out_channels=32,
-                kernel_size=2,
-                stride=2
-
-            ))
-        layers.append(nn.ReLU(inplace=True))
-
-        layers.append(nn.BatchNorm2d(32))
-        layers.append(
-            nn.ConvTranspose2d(
-                in_channels=32,
-                out_channels=16,
-                kernel_size=4,
-                stride=4
-
-            ))
-        layers.append(nn.ReLU(inplace=True))
-        layers.append(nn.BatchNorm2d(16))
-        layers.append(
-            nn.ConvTranspose2d(
-                in_channels=16,
-                out_channels=8,
-                kernel_size=2,
-                stride=2
-
-            ))
-        layers.append(nn.ReLU(inplace=True))
-        layers.append(nn.BatchNorm2d(8))
-        layers.append(
-            nn.ConvTranspose2d(
-                in_channels=8,
-                out_channels=1,
-                kernel_size=2,
-                stride=2
-
-            ))
-        layers.append(nn.ReLU(inplace=True))
-        self.conv_model = nn.Sequential(*layers)
-
-    def forward(self, x):
-        x = self.model.forward(x)
-        x = self.conv_model.forward(x)
-        return x
 
     def print_details(self):
         batch_size = 32

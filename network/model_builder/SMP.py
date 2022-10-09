@@ -1,10 +1,10 @@
 import torch.nn as nn
 from torchinfo import summary
 import torch
-from network.heads.bbox_head import SMP_BBoxHead,ResNet_BBoxHead
-from network.heads.heatmap_head import SMP_HeatMapHead,ResNet_HeatMapHead
-from network.heads.roi_head import SMP_RoIHead,ResNet_RoIHead
-from network.heads.embedder import SMP_Embedder,ResNet_Embedder
+from network.heads.bbox_head import SMP_BBoxHead
+from network.heads.heatmap_head import SMP_HeatMapHead
+from network.heads.roi_head import SMP_RoIHead
+from network.heads.embedder import SMP_Embedder
 from network.roi_classifier.clip_model import CLIPModel
 from network.roi_classifier.utils import get_masked_heatmaps, get_binary_masks, make_detections_valid
 from network.models.SMP_DeepLab.utils import get_bounding_box_prediction
@@ -35,16 +35,12 @@ class SMPModel(nn.Module):
         # self.decoder_model = DecoderConvTModel(cfg)
 
         self.heatmap_head = SMP_HeatMapHead(cfg)
-        #self.heatmap_head = ResNet_HeatMapHead(cfg)
         # self.heatmap_head = nn.ReLU()
         self.bbox_head = SMP_BBoxHead(cfg)
-        #self.bbox_head = ResNet_BBoxHead(cfg)
         # self.bbox_head = nn.ReLU()
         self.roi_head = SMP_RoIHead(cfg)
-        #self.roi_head=ResNet_RoIHead(cfg)
         self.clip_model = CLIPModel(cfg)
         self.embedder = SMP_Embedder(cfg)
-        #self.embedder = ResNet_Embedder(cfg)
 
         self.cfg = cfg
         if cfg["smp"]["freeze_encoder"]:
@@ -59,14 +55,10 @@ class SMPModel(nn.Module):
         self.heatmap_head.model.apply(weights_init)
         # self.encoder_model.model.apply(weights_init)
         # self.decoder_model.model.apply(weights_init)
-        #self.heatmap_head.conv_model.apply(weights_init)
         self.bbox_head.bbox_h_model.apply(weights_init)
         self.bbox_head.bbox_w_model.apply(weights_init)
         # self.bbox_head.model.apply(weights_init)
-        #self.roi_head.conv_model.apply(weights_init)
         self.roi_head.model.apply(weights_init)
-
-        #self.embedder.conv_model.apply(weights_init)
         self.embedder.model.apply(weights_init)
 
     def forward(self, batch, epoch,split=0):
@@ -114,9 +106,9 @@ class SMPModel(nn.Module):
 
     def print_details(self):
         batch_size = 32
-        #summary(self.embedder, input_size=(3, 1, 224, 224))
+        # summary(self.embedder, input_size=(3, 1, 224, 224))
 
-        summary(self.embedder, input_size=(3, 3, 320, 320))
+        # summary(self.heatmap_head, input_size=(3, 16, 320, 320))
         # sys.exit(0)
         # summary(self.encoder_model, input_size=(batch_size, 3, 300, 300))
         # summary(self.decoder_model, input_size=(batch_size, 512, 10, 10))

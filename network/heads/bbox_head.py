@@ -2,7 +2,6 @@ import torch
 import torch.nn as nn
 
 from torchinfo import summary
-from torchvision.models import ResNet18_Weights
 
 
 class EfficientnetConv2DT_BBoxHead(nn.Module):
@@ -151,78 +150,6 @@ class SMP_BBoxHead(nn.Module):
     def forward(self, x):
         w_heatmap = self.bbox_w_model.forward(x)
         h_heatmap = self.bbox_h_model.forward(x)
-        heatmap = torch.cat([w_heatmap, h_heatmap], dim=1)
-
-        return heatmap
-
-    def print_details(self):
-        batch_size = 32
-        summary(self.model, input_size=(batch_size, 256, 96, 96))
-
-
-class ResNet_BBoxHead(nn.Module):
-    def __init__(self, cfg):
-        super().__init__()
-        self.bbox_w_model,self.bbox_w_conv_model = self.get_model(cfg)
-        self.bbox_h_model,self.bbox_h_conv_model = self.get_model(cfg)
-
-    def get_model(self, cfg):
-
-        model = torch.hub.load(
-            "pytorch/vision:v0.10.0",
-            "resnet18", weights=ResNet18_Weights.DEFAULT
-        )
-        model = nn.Sequential(*list(model.children())[:-2])
-
-        layers = []
-
-        layers.append(
-            nn.ConvTranspose2d(
-                in_channels=512,
-                out_channels=32,
-                kernel_size=2,
-                stride=2
-
-            ))
-        layers.append(nn.ReLU(inplace=True))
-
-        layers.append(nn.BatchNorm2d(32))
-        layers.append(
-            nn.ConvTranspose2d(
-                in_channels=32,
-                out_channels=16,
-                kernel_size=4,
-                stride=4
-
-            ))
-        layers.append(nn.ReLU(inplace=True))
-        layers.append(nn.BatchNorm2d(16))
-        layers.append(
-            nn.ConvTranspose2d(
-                in_channels=16,
-                out_channels=8,
-                kernel_size=2,
-                stride=2
-
-            ))
-        layers.append(nn.ReLU(inplace=True))
-        layers.append(nn.BatchNorm2d(8))
-        layers.append(
-            nn.ConvTranspose2d(
-                in_channels=8,
-                out_channels=1,
-                kernel_size=2,
-                stride=2
-
-            ))
-        layers.append(nn.ReLU(inplace=True))
-        conv_model = nn.Sequential(*layers)
-        return model,conv_model
-
-    def forward(self, x):
-        w_heatmap = self.bbox_w_conv_model(self.bbox_w_model(x))
-        h_heatmap = self.bbox_h_conv_model(self.bbox_h_model(x))
-
         heatmap = torch.cat([w_heatmap, h_heatmap], dim=1)
 
         return heatmap

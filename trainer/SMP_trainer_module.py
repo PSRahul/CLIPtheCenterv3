@@ -321,11 +321,6 @@ class SMPTrainer():
         with torch.no_grad():
             with tqdm(enumerate(self.test_dataloader, 0), unit=" test batch") as tepoch:
                 for i, batch in tepoch:
-                    running_test_heatmap_loss = 0.0
-                    running_test_offset_loss = 0.0
-                    running_test_bbox_loss = 0.0
-                    running_test_embedding_loss = 0.0
-                    running_test_loss = 0.0
                     tepoch.set_description(f"Epoch {self.epoch}")
 
                     for key, value in batch.items():
@@ -402,10 +397,10 @@ class SMPTrainer():
                     running_test_embedding_loss = embedding_loss.item()
                     running_test_loss += loss.item()
 
-                    tepoch.set_postfix(test_loss=running_test_loss ,
-                                       test_heatmap_loss=running_test_heatmap_loss ,
-                                       test_bbox_loss=running_test_bbox_loss ,
-                                       test_embedding_loss=running_test_embedding_loss )
+                    tepoch.set_postfix(test_loss=running_test_loss / (i + 1),
+                                       test_heatmap_loss=running_test_heatmap_loss / (i + 1),
+                                       test_bbox_loss=running_test_bbox_loss / (i + 1),
+                                       test_embedding_loss=running_test_embedding_loss / (i + 1))
                 """
                 running_test_heatmap_loss /= len(self.test_dataloader)
                 running_test_bbox_loss /= len(self.test_dataloader)
@@ -462,7 +457,7 @@ class SMPTrainer():
                                dim=0)
         embeddings = torch.cat(embeddings_list,
                                dim=0)
-        detections = torch.hstack((detections.cpu(), embeddings.cpu()))
+        detections = torch.hstack((detections, embeddings))
         detections = detections.cpu().numpy()
         prediction_save_path = os.path.join(self.checkpoint_dir,
                                             "bbox_predictions.npy")
