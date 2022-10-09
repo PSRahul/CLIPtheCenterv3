@@ -1,3 +1,5 @@
+debug_outputs/
+trained_models/
 .vscode/
 .idea/
 # Byte-compiled / optimized / DLL files
