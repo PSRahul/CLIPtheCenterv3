@@ -13,6 +13,7 @@ import cv2
 from torchvision.datasets import CocoDetection
 from tqdm import tqdm
 from yaml.loader import SafeLoader
+from post_process.torchmetric_evaluation import calculate_torchmetrics_mAP
 from post_process.nms import perform_nms
 import copy
 
@@ -54,4 +55,3 @@ def visualise_bbox(cfg, dataset, id, gt=None, pred=None, draw_gt=True, draw_pred
     #plt.show()
     os.makedirs(os.path.join(checkpoint_dir,"images"), exist_ok=True)
     plt.savefig(os.path.join(checkpoint_dir,"images",str(id)+".png"))
-    plt.close("all")

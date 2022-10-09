@@ -1,6 +1,7 @@
 import torch.nn as nn
 import torch
 from torchinfo import summary
+from network.models.EfficientnetConv2DT.utils import get_bounding_box_prediction
 import clip
 from PIL import Image
 import os
@@ -34,9 +35,20 @@ class CLIPModel(nn.Module):
             for detection_index in range(self.cfg["evaluation"]["topk_k"]):
                 detection = output_roi_index[detection_index]
                 bbox = detection[1:5]
-                
+                # Check for negative width and height
+                # if (bbox[2] < 0):
+                #    bbox[2] = 0
+                # if (bbox[3] < 0):
+                #    bbox[3] = 0
+
                 (left, upper, right, lower) = (
                     int(bbox[0]), int(bbox[1]), int(bbox[0] + bbox[2]), int(bbox[1] + bbox[3]))
+                # If the height and width are nearly zero, add 40 pixels as dummy index
+                # if ((right - left) < 40):
+                #    right = 40 + left
+                # if ((lower - upper) < 40):
+                #    lower = 40 + upper
+                # print((left, upper, right, lower))
                 image_cropped = image.crop((left, upper, right, lower))
 
                 image_cropped_clip = self.clip_preprocess(image_cropped).unsqueeze(0)

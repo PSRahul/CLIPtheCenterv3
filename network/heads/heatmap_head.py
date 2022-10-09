@@ -14,7 +14,7 @@ class SMP_HeatMapHead(nn.Module):
         layers.append(
             nn.Conv2d(
                 in_channels=int(cfg["smp"]["decoder_output_classes"]),
-                out_channels=1,
+                out_channels=8,
                 kernel_size=3,
                 padding=1
 

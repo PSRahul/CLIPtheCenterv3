@@ -33,6 +33,9 @@ def find_heatmap_peaks(cfg, output_heatmap):
 
 
 def get_topk_indexes_class_agnostic(cfg, output_heatmap):
+    if (cfg["debug"]):
+
+        heatmap_np = output_heatmap[0].detach().cpu().numpy()
     k = cfg["evaluation"]["topk_k"]
     output_heatmap = output_heatmap.squeeze(dim=1).to("cuda")
 
@@ -65,7 +68,7 @@ def process_output_heatmaps(cfg, output_heatmap):
         plt.imshow(heatmap_np, cmap='Greys')
         plt.show()
 
-    output_heatmap = find_heatmap_peaks(cfg, output_heatmap)
+    # output_heatmap = find_heatmap_peaks(cfg, output_heatmap)
 
     if (cfg["debug"]):
         heatmap_np = output_heatmap.detach().cpu()[0].squeeze(0).numpy()
@@ -76,10 +79,15 @@ def process_output_heatmaps(cfg, output_heatmap):
                                            output_heatmap)
 
 
-def get_bbox_from_heatmap(output_bbox, topk_heatmap_index_row, topk_heatmap_index_column, max_width=5):
+def get_bbox_from_heatmap(cfg,output_bbox, topk_heatmap_index_row, topk_heatmap_index_column, max_width=5):
     batch_size = output_bbox.shape[0]
     topk_size = topk_heatmap_index_column.shape[1]
     filtered_bbox = torch.zeros((batch_size, topk_size, 2), device="cuda")
+    if (cfg["debug"]):
+
+        bbox_np_w = output_bbox[0, 0].detach().cpu().numpy()
+        bbox_np_h = output_bbox[0, 1].detach().cpu().numpy()
+
     for batch_index in range(batch_size):
         for topk_index in range(topk_size):
             height = topk_heatmap_index_row[batch_index, topk_index].int().cpu()
@@ -109,14 +117,18 @@ def get_bbox_from_heatmap(output_bbox, topk_heatmap_index_row, topk_heatmap_inde
 
 def get_bounding_box_prediction(cfg, output_heatmap, output_bbox, image_id):
     batch, num_classes, height, width = output_heatmap.size()
-
     k = cfg["evaluation"]["topk_k"]
+    if (cfg["debug"]):
+
+        bbox_np_w = output_bbox[0, 0].detach().cpu().numpy()
+        bbox_np_h = output_bbox[0, 1].detach().cpu().numpy()
+        heatmap_np = output_heatmap[0].detach().cpu().numpy()
 
     topk_heatmap_value, topk_heatmap_index, topk_classes, topk_heatmap_index_row, topk_heatmap_index_column = process_output_heatmaps(
         cfg, output_heatmap)
 
     output_heatmap = topk_heatmap_value
-    output_bbox = get_bbox_from_heatmap(output_bbox, topk_heatmap_index_row, topk_heatmap_index_column)
+    output_bbox = get_bbox_from_heatmap(cfg,output_bbox, topk_heatmap_index_row, topk_heatmap_index_column)
     # output_bbox = transpose_and_gather_output_array(output_bbox, topk_heatmap_index)  # .view(batch, k, 2)
 
     # [32,10] -> [32,10,1]

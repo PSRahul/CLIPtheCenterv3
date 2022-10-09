@@ -13,6 +13,10 @@ import sys
 from torch.nn import Identity
 import segmentation_models_pytorch as smp
 from segmentation_models_pytorch import DeepLabV3Plus, Unet
+from network.decoder.decoder_model import DecoderConvTModel
+from network.encoder.resnet18 import ResNet18Model
+
+from network.encoder.resnet50 import ResNet50Model
 
 
 class SMPModel(nn.Module):
@@ -26,9 +30,14 @@ class SMPModel(nn.Module):
             classes=int(cfg["smp"]["decoder_output_classes"])
         )
         # self.encoder_decoder_model.segmentation_head = nn.Identity()
+        encoder_model_name = globals()[cfg["model"]["encoder"]["encoder_name"]]
+        # self.encoder_model = encoder_model_name(cfg)
+        # self.decoder_model = DecoderConvTModel(cfg)
 
         self.heatmap_head = SMP_HeatMapHead(cfg)
+        # self.heatmap_head = nn.ReLU()
         self.bbox_head = SMP_BBoxHead(cfg)
+        # self.bbox_head = nn.ReLU()
         self.roi_head = SMP_RoIHead(cfg)
         self.clip_model = CLIPModel(cfg)
         self.embedder = SMP_Embedder(cfg)
@@ -85,9 +94,8 @@ class SMPModel(nn.Module):
             model_encodings_normalised = model_encodings / model_encodings.norm(dim=-1, keepdim=True)
         else:
             clip_encoding=torch.ones((1,1))
-            model_encodings_normalised=torch.ones((1,1))
-            detections_adjusted=detections
-        return output_heatmap, output_bbox, detections_adjusted, clip_encoding, model_encodings_normalised
+            model_encodings_normalised=torch.zeros((1,1))
+        return output_heatmap, output_bbox, detections, clip_encoding, model_encodings_normalised
 
     def forward_summary(self, image):
         x = self.encoder_decoder_model(image)
