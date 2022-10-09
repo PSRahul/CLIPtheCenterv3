@@ -1,4 +1,6 @@
 1.5939c833
+Metric with full embedding 08736642
+
 /home/psrahul/MasterThesis/repo/Phase6/GoodModels/PASCAL_3_2_10_SA/09102022_0858/
 /home/psrahul/MasterThesis/repo/Phase6/GoodModels/PASCAL_3_2_10_SA/09102022_1140/
 
@@ -12,4 +14,3 @@
 2.08736642
     Added additional constraints in detections
 
-3.
