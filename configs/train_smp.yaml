@@ -11,7 +11,7 @@ test_parameters:
 trainer:
   num_epochs: 1200
   resume_training: True
-  checkpoint_path: "/home/psrahul/MasterThesis/repo/Phase6/Outputs/PASCAL_3_2_10_SA/Unetresnet50/09102022_0858/epoch-1000-loss-1.6903165.pth"
+  checkpoint_path: "/home/psrahul/MasterThesis/repo/Phase6/Outputs/PASCAL_3_2_10_SA/Unetresnet50/09102022_1149/epoch-700-loss-4.5438077.pth"
   val_save_interval: 50
   bbox_heatmap_loss: False
   bbox_scatter_loss: True
