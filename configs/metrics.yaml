@@ -1,6 +1,6 @@
 data:
-  root: "/home/psrahul/MasterThesis/datasets/PASCAL_3_2_10_SA/base_classes/train/coco/"
-prediction_path: "/home/psrahul/MasterThesis/repo/Phase6/Outputs/PASCAL_3_2_10_SA/Unetresnet50/09102022_1331/bbox_predictions.npy"
+  root: "/home/psrahul/MasterThesis/datasets/PASCAL_15_5_SA/base_classes/train/coco/"
+prediction_path: "/home/psrahul/MasterThesis/repo/Phase6/Outputs/PASCAL_3_2_10_SA/Unetresnet50/09102022_2113/bbox_predictions.npy"
 clip_embedding_path: "/home/psrahul/MasterThesis/datasets/PASCAL_2012_ZETA_CA/support_images/base_classes/val/clip_embeddings.npy"
 generate_clip_embedding: True
 clip_embedding_root: "/home/psrahul/MasterThesis/datasets/BBoxGroundtruths/PASCAL_15_5/train/"
