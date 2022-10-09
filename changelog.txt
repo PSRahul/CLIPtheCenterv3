@@ -1,9 +1,15 @@
 1.5939c833
+/home/psrahul/MasterThesis/repo/Phase6/GoodModels/PASCAL_3_2_10_SA/09102022_0858/
+/home/psrahul/MasterThesis/repo/Phase6/GoodModels/PASCAL_3_2_10_SA/09102022_1140/
+
  Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.889
- Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.344
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.601
 
  Make BBOx only at the object center
  Make Center Gaussian with only one object at one
  Increase the layer from 1 to 3 in BBox and Heatmap head
 
-2.
+2.08736642
+    Added additional constraints in detections
+
+3.

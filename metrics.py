@@ -18,7 +18,7 @@ from post_process.torchmetric_evaluation import calculate_torchmetrics_mAP
 from post_process.nms import perform_nms
 from post_process.utils import resize_predictions_image_size, assign_classes
 from post_process.visualise import visualise_bbox
-
+from post_process.get_clip_embedding import generate_clip_embedding
 
 # matplotlib.use('Agg')
 
@@ -100,7 +100,16 @@ def main(cfg):
     dataset_root = cfg["data"]["root"]
     dataset = CocoDetection(root=os.path.join(dataset_root, "data"),
                             annFile=os.path.join(dataset_root, "labels.json"))
-    clip_embedding = np.load(cfg["clip_embedding_path"])
+    class_name_list = []
+    class_id_list = []
+    for index in tqdm(range(len(dataset.coco.cats))):
+        cat = dataset.coco.cats[index]
+        class_id_list.append(cat["id"])
+        class_name_list.append(cat["name"])
+    if (cfg["generate_clip_embedding"]):
+        clip_embedding = generate_clip_embedding(cfg, checkpoint_dir, class_id_list, class_name_list)
+    else:
+        clip_embedding = np.load(cfg["clip_embedding_path"])
 
     if (cfg["use_metric_data_path"]):
         print("Loading data from ", cfg["metric_data_path"])
