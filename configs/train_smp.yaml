@@ -1,6 +1,6 @@
 version: 0
 
-train: False
+train: True
 test: True
 dataset_class_debug: False
 debug: False
@@ -9,9 +9,9 @@ device: "cuda"
 test_parameters:
   save_test_outputs: True
 trainer:
-  num_epochs: 1200
-  resume_training: True
-  checkpoint_path: "/home/psrahul/MasterThesis/repo/Phase6/Outputs/PASCAL_3_2_10_SA/Unetresnet50/09102022_1149/epoch-700-loss-4.5438077.pth"
+  num_epochs: 2000
+  resume_training: False
+  checkpoint_path: "/home/psrahul/MasterThesis/repo/Phase6/Outputs/PASCAL_3_2_10_SA/Unetresnet50/09102022_1228/epoch-999-loss-27.6306324.pth"
   val_save_interval: 50
   bbox_heatmap_loss: False
   bbox_scatter_loss: True
@@ -22,7 +22,7 @@ data:
   train_data_root: "/home/psrahul/MasterThesis/datasets/PASCAL_3_2_10_SA/base_classes/train/coco/"
   val_data_root: "/home/psrahul/MasterThesis/datasets/PASCAL_3_2_10_SA/base_classes/val/coco/"
   test_data_root: "/home/psrahul/MasterThesis/datasets/PASCAL_3_2_10_SA/base_classes/train/coco/"
-  train_aug: False
+  train_aug: True
   train_batch_size: 5
   val_batch_size: 5
   test_batch_size: 1

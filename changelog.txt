@@ -1,6 +1,6 @@
 1.5939c833
 Metric with full embedding 08736642
-
+1000 epochs
 /home/psrahul/MasterThesis/repo/Phase6/GoodModels/PASCAL_3_2_10_SA/09102022_0858/
 /home/psrahul/MasterThesis/repo/Phase6/GoodModels/PASCAL_3_2_10_SA/09102022_1140/
 
@@ -11,6 +11,11 @@ Metric with full embedding 08736642
  Make Center Gaussian with only one object at one
  Increase the layer from 1 to 3 in BBox and Heatmap head
 
-2.08736642
+2.Code Change 08736642
+Training 83200a28
     Added additional constraints in detections
+    700 epochs
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.617
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.392
 
+3. Add augmentations
